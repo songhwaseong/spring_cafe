@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>fruitList</title>
+</head>
+<body>
+<table class="tb_col" style="border: 1px solid black;">
+    <tr>
+        <th>id</th>
+        <th>name</th>
+        <th>price</th>
+    </tr>
+    <tr th:each="fruit : ${fruitList}">
+        <td th:text="${fruit.id}"></td>
+        <td th:text="${fruit.name}"></td>
+        <td th:text="${fruit.price}"></td>
+    </tr>
+</table>
+
+
+</body>
+</html>
