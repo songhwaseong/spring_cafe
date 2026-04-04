@@ -37,7 +37,7 @@ public class MemberController {
 
         // 3) 회원가입 처리
         memberService.insert(bean);
-        return new ResponseEntity<>(bean.getName(), HttpStatus.OK);
+        return new ResponseEntity<>(bean, HttpStatus.OK);
 
     }
 }

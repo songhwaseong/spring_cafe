@@ -40,6 +40,18 @@ public class MemberTestController {
             return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
         }
 
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+            bindingResult.getFieldErrors().forEach(err -> errors.put(err.getField(), err.getDefaultMessage()));
+            return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        }
+
+        // 2) 이메일 중복 체크
+        Member bean = memberRepository.findByEmail(member.getEmail());
+        if (bean != null) {
+            return new ResponseEntity<>(Map.of("email", "이미 존재하는 이메일 주소입니다."), HttpStatus.BAD_REQUEST);
+        }
+
         log.info("==========> {}",member);
         member.setPassword(passwordEncoder.encode(member.getPassword()));
         memberRepository.save(member);

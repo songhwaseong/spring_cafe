@@ -1,5 +1,7 @@
 package com.coffee.config;
 
+import com.coffee.handler.CustomLoginFailureHandler;
+import com.coffee.handler.CustomLoginSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -9,7 +11,6 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 public class SecurityConfig {
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -37,12 +38,28 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
-                        .loginPage("/member/login") // 커스텀 로그인 페이지
-                        .permitAll()
+                        .loginProcessingUrl("/member/login") // React에서 로그인시 요청할 url
+                        .usernameParameter("email") // 로그인시 id 역할을 할 컬럼명
+                        .passwordParameter("password") // 비밀 번호 컬럼명
+                        .permitAll() // 누구든지 접근 허용
+                        .successHandler(handler()) // 로그인 성공시 수행할 동작을 여기에 명시
+                        .failureHandler(failureHandler()) // 로그인 실패시
                 );
+
 
         http.cors(cors -> {});
 
         return http.build();
     }
+
+    @Bean // 개발자가 정의한 "로그인 성공 핸들러" 객체
+    public CustomLoginSuccessHandler handler(){
+        return new CustomLoginSuccessHandler();
+    }
+
+    @Bean // 개발자가 정의한 "로그인 성공 핸들러" 객체
+    public CustomLoginFailureHandler failureHandler(){
+        return new CustomLoginFailureHandler();
+    }
+
 }
