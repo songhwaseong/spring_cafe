@@ -67,6 +67,14 @@ public class MemberTestController {
 
         return member ;
     }
+    @GetMapping("/api/memberInfo")
+    public Member getMemberInfo(String email){
+        Member member =  memberRepository.findByEmail(email);
+        log.info("==========> {}",member);
+        member.setPassword("");
+
+        return member;
+    }
     @GetMapping("/api/memberList")
     public List<Member> getMemberList(){
         List<Member> mList =  memberRepository.findAll();

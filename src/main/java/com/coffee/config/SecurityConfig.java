@@ -2,15 +2,31 @@ package com.coffee.config;
 
 import com.coffee.handler.CustomLoginFailureHandler;
 import com.coffee.handler.CustomLoginSuccessHandler;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 
 @Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final JwtTokenProvider jwtProvider;
+    private final CustomAuthenticationEntryPoint unauthorizedEntryPoint;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -44,8 +60,13 @@ public class SecurityConfig {
                         .permitAll() // 누구든지 접근 허용
                         .successHandler(handler()) // 로그인 성공시 수행할 동작을 여기에 명시
                         .failureHandler(failureHandler()) // 로그인 실패시
-                );
-
+                )
+                .addFilterBefore(new JwtAuthenticationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
+                ;
+        http
+                .exceptionHandling((exceptionConfig) ->
+                exceptionConfig.authenticationEntryPoint(unauthorizedEntryPoint)
+        );
 
         http.cors(cors -> {});
 
