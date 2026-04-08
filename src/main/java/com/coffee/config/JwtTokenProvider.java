@@ -1,123 +1,100 @@
 package com.coffee.config;
 
-import com.coffee.service.CustomUserDetailsService;
+import com.coffee.entity.Member;
+import com.coffee.repository.MemberRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import java.nio.charset.StandardCharsets;
 import java.security.Key;
-
 import java.util.Date;
+import java.util.Map;
+
 /*
 메소드	역할
 createToken	JWT 생성
 getEmail	토큰에서 email 추출
 validateToken	토큰 유효성 검사
 */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtTokenProvider { // JWT 생성, 검증 기능 담당자 클래스
+    private final MemberRepository memberRepository ;
+    @Value("${jwt.secret}")
+    private String secretKey;
 
-    @Value("${jwt.secret.key}")
-    private String salt;
+    @Value("${jwt.expiration}")
+    private long expiration;
 
-    private Key secretKey;
-
-    private final CustomUserDetailsService userDetailsService;
+    private Key signingKey;
 
     @PostConstruct
     protected void init() {
-        secretKey = Keys.hmacShaKeyFor(salt.getBytes(StandardCharsets.UTF_8));
+        this.signingKey = Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
-    public String createToken(String email) { // 매개 변수 : 토큰 안에 사용자 식별값 저장
+    private Key getSigningKey() {
+        return signingKey;
+    }
+
+    public String createToken(Member member) { // 매개 변수 : 토큰 안에 사용자 식별값 저장
         // 만료 시간 1시간
-        //long EXPIRATION = 3000;
-        long EXPIRATION = 1000 * 60 * 60;
         return Jwts.builder()
-                .setSubject(email)
+                .setClaims(Map.of("role", member.getRole().name()))
+                .setSubject(member.getEmail())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
-                .signWith(secretKey, SignatureAlgorithm.HS256)
-                .compact();
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(this.getSigningKey(), SignatureAlgorithm.HS256)
+                //.setClaims(Map.of("role", member.getRole().name()))
+                .compact(); // 최종 문자열 생성
     }
 
     public String getEmail(String token) { // JWT에서 사용자 정보 꺼내기
-
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(secretKey)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-
-        return claims.getSubject();
+        return this.getClaims(token).getSubject();
     }
 
 //    private Key getSigningKey() { // 위조 방지를 위한 서명
-//
-//        //String SECRET_KEY = "my-secret-key-my-secret-key-my-secret-key";
-//        return Keys.hmacShaKeyFor(secretKey.getBytes());
+//        // 이 값도 사실 노출 방지를 위하여 어딘가에 숨겨야 함
+//        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
 //    }
 
-    // 권한정보 획득
-    // Spring Security 인증과정에서 권한확인을 위한 기능
-    public Authentication getAuthentication(String token) {
-        UserDetails userDetails = userDetailsService.loadUserByUsername(this.getAccount(token));
-        return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
+    public Claims getClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(this.getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 
-    // 토큰에 담겨있는 유저 account 획득
-    public String getAccount(String token) {
-        return Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token).getBody().getSubject();
-    }
-
-    // Authorization Header를 통해 인증을 한다.
-    public String resolveToken(HttpServletRequest request) {
-        return request.getHeader("Authorization");
-    }
-
-    // 토큰 검증
-//    public boolean validateToken(String token) {
-//        try {
-//            // Bearer 검증
-//            if (!token.substring(0, "BEARER ".length()).equalsIgnoreCase("BEARER ")) {
-//                return false;
-//            } else {
-//                token = token.split(" ")[1].trim();
-//            }
-//            Jws<Claims> claims = Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
-//            // 만료되었을 시 false
-//            return !claims.getBody().getExpiration().before(new Date());
-//        } catch (Exception e) {
-//            return false;
-//        }
-//    }
-
-    public boolean validateToken(String token) {
+    public boolean validateToken(String token) { // JWT 토큰 유효성 검사
         try {
 
-            if (!token.substring(0, "BEARER ".length()).equalsIgnoreCase("BEARER ")) {
-                return false;
-            } else {
-                token = token.split(" ")[1].trim();
-            }
-            Jws<Claims> claims = Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
-            // 만료되었을 시 false
+            Jws<Claims> claims = Jwts.parserBuilder()
+                    .setSigningKey(this.getSigningKey())
+                    .build()
+                    .parseClaimsJws(token);
+            log.info("==================> {}", token);
+            log.info("==================> {}", claims);
+            log.info("==================> {}", getClaims(token));
+            log.info("==================> {}", getClaims(token).getExpiration());
+            log.info("==================> {}", getClaims(token).getSubject());
+            log.info("==================> {}", getClaims(token).getNotBefore());
+            log.info("==================> {}", getClaims(token).getAudience());
+            log.info("==================> {}", getClaims(token).getIssuedAt());
             return !claims.getBody().getExpiration().before(new Date());
         } catch (ExpiredJwtException e) {
-            // 토큰 만료 예외 발생
-            System.out.println("만료된 JWT 토큰입니다.1");
-            throw e; // 필터로 던짐
-        } catch (JwtException | IllegalArgumentException e) {
-            System.out.println("잘못된 JWT 토큰입니다.2");
+            System.out.println("토큰 만료됨");
+            throw e;
+        } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
+            System.out.println("토큰 서명/형식 오류");
+            throw e;
+        } catch (Exception e) {
+            System.out.println("기타 토큰 오류");
             throw e;
         }
     }

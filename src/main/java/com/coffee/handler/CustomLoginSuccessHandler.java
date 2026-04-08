@@ -9,7 +9,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
@@ -22,7 +21,6 @@ import java.util.Map;
 
 // Spring Security가 로그인 성공했을 때 자동으로 호출하는 콜백 클래스입니다.
 // 로그인 성공 후, 클라이언트(React)에 JSON 데이터를 내려주는 역할을 합니다.
-@Slf4j
 @Component
 public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
     private MemberService memberService ;
@@ -61,7 +59,12 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
         User user = (User)authentication.getPrincipal();
         String email = user.getUsername() ; // 우리가 사용한 username은 사실 email입니다.
         Member member = memberService.findByEmail(email) ;
-        String token = jwtTokenProvider.createToken(email); //
+
+        String token = jwtTokenProvider.createToken(member); //
+
+        System.out.println("이거 사용????");
+        System.out.println("이거 사용????");
+        System.out.println("이거 사용????");
 
         Map<String, Object> data = new HashMap<>() ;
         data.put("accessToken", token);

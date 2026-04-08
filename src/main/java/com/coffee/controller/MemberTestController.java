@@ -1,4 +1,5 @@
 package com.coffee.controller;
+import com.coffee.constant.Role;
 import com.coffee.entity.Member;
 import com.coffee.repository.MemberRepository;
 import jakarta.validation.Valid;
@@ -6,19 +7,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Slf4j
+@RequestMapping("/api")
 @RestController // 컨트롤러는 특정 요청에 대한 처리를 수행해 줍니다.
 public class MemberTestController {
     @Autowired
@@ -27,9 +28,8 @@ public class MemberTestController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @PostMapping("/api/insertMember")
+    @PostMapping("/insertMember")
     public ResponseEntity<?> createUser(@Valid @RequestBody Member member, BindingResult bindingResult){
-
 
         // 1) 유효성 검사 결과 확인
         if (bindingResult.hasErrors()) {
@@ -59,7 +59,7 @@ public class MemberTestController {
         return new ResponseEntity<>(member, HttpStatus.OK);
     }
 
-    @PostMapping("/api/updateMember")
+    @PostMapping("/updateMember")
     public Member modifyUser(@Valid @RequestBody Member member){
         log.info("==========> {}",member);
         member.setPassword(passwordEncoder.encode(member.getPassword()));
@@ -67,22 +67,25 @@ public class MemberTestController {
 
         return member ;
     }
-    @GetMapping("/api/memberInfo")
+    @GetMapping("/memberInfo")
     public Member getMemberInfo(String email){
+        Authentication auth =  SecurityContextHolder.getContext().getAuthentication();
+        log.info("========================================> {}",auth);
         Member member =  memberRepository.findByEmail(email);
+        auth.getAuthorities().forEach(g -> member.setRole(g.getAuthority().endsWith("ADMIN") ? Role.ADMIN : Role.USER));
         log.info("==========> {}",member);
         member.setPassword("");
 
         return member;
     }
-    @GetMapping("/api/memberList")
+    @GetMapping("/memberList")
     public List<Member> getMemberList(){
         List<Member> mList =  memberRepository.findAll();
         log.info("==========> {}",mList);
 
         return mList;
     }
-    @GetMapping("/api/lastMemberId")
+    @GetMapping("/lastMemberId")
     public Long getLastMemberId(){
         List<Member> mList =  memberRepository.findAll();
         Long lastMemberId = mList.stream().mapToLong(Member::getId).max().getAsLong();

@@ -1,31 +1,69 @@
 package com.coffee.controller;
 
+
+import com.coffee.config.JwtTokenProvider;
+import com.coffee.dto.LoginDto;
 import com.coffee.entity.Member;
 import com.coffee.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
+
 @RestController
+@RequestMapping("/member")
 @RequiredArgsConstructor
 public class MemberController {
-    private final MemberService memberService ;
+    private final MemberService memberService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    @PostMapping("/member/signup")
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, Object>> login(@RequestBody LoginDto dto){
+
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        dto.getEmail(),
+                        dto.getPassword()
+                )
+        );
+
+        Member member = memberService.findByEmail(dto.getEmail());
+
+
+        if(member == null){
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "사용자 정보를 찾을 수 없습니다."));
+        }else{
+            return ResponseEntity.ok(Map.of(
+                    "accessToken", jwtTokenProvider.createToken(member),
+                    "id", member.getId(),
+                    "name", member.getName(),
+                    "email", member.getEmail(),
+                    "role", member.getRole().name()));
+        }
+    }
+
+    @PostMapping("/signup")
     public ResponseEntity<?> signup(@Valid @RequestBody Member bean, BindingResult bindingResult) {
         // 1) 유효성 검사 결과 확인
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = new HashMap<>();
-            bindingResult.getFieldErrors().forEach(err -> errors.put(err.getField(), err.getDefaultMessage()));
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                errors.put(error.getField(), error.getDefaultMessage());
+            }
             return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
         }
 
@@ -37,7 +75,7 @@ public class MemberController {
 
         // 3) 회원가입 처리
         memberService.insert(bean);
-        return new ResponseEntity<>(bean, HttpStatus.OK);
-
+        return new ResponseEntity<>("회원 가입 성공", HttpStatus.OK);
     }
+
 }

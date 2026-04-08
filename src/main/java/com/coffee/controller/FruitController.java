@@ -12,7 +12,7 @@ import java.util.List;
 @Slf4j
 @RestController // 컨트롤러는 특정 요청에 대한 처리를 수행해 줍니다.
 public class FruitController {
-    @GetMapping("/api/fruit")
+    @GetMapping("/product/fruit")
     public Fruit test(){
         Fruit bean = new Fruit();
         bean.setId("banana");
@@ -22,7 +22,7 @@ public class FruitController {
         return bean ;
     }
 
-    @GetMapping("/api/fruitList")
+    @GetMapping("/product/fruitList")
     public List<Fruit> test02(){
         List<Fruit> fruitList = new ArrayList<>();
         fruitList.add(new Fruit("apple", "사과", 1000));

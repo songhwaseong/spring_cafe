@@ -16,7 +16,7 @@ public class CoffeeController {
     @Autowired
     private CoffeeService coffeeService;
 
-    @GetMapping("/api/coffee")
+    @GetMapping("/product/coffee")
     public Coffee test(Integer id){
 
         //builder 사용
@@ -32,7 +32,7 @@ public class CoffeeController {
         return coffeeService.getCoffee(id);
     }
 
-    @GetMapping("/api/coffee/list")
+    @GetMapping("/product/coffee/list")
     public List<Coffee> test02(){
         log.info("=======================> list");
         return coffeeService.getCoffeeList() ;

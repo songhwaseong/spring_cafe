@@ -47,6 +47,6 @@ public class Member {
     private Role role; // 일반인 또는 관리자
 
     @CreationTimestamp
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Seoul")
     private LocalDateTime regdate ; // 등록 일자
 }
