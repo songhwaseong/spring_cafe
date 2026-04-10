@@ -32,6 +32,9 @@ public class JwtTokenProvider { // JWT 생성, 검증 기능 담당자 클래스
     @Value("${jwt.expiration}")
     private long expiration;
 
+    @Value("${jwt.expirationWeek}")
+    private long expirationWeek;
+
     private Key signingKey;
 
     @PostConstruct
@@ -43,12 +46,12 @@ public class JwtTokenProvider { // JWT 생성, 검증 기능 담당자 클래스
         return signingKey;
     }
 
-    public String createToken(Member member) { // 매개 변수 : 토큰 안에 사용자 식별값 저장
+    public String createToken(Member member, boolean isAutoLogin) { // 매개 변수 : 토큰 안에 사용자 식별값 저장
         // 만료 시간 1시간
         return Jwts.builder()
                 .setSubject(member.getEmail())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .setExpiration(new Date(System.currentTimeMillis() + (isAutoLogin ? expirationWeek : expiration)))
                 .signWith(this.getSigningKey(), SignatureAlgorithm.HS256)
                 .claim("role", member.getRole().name())
                 //.setClaims(Map.of("role", member.getRole().name()))

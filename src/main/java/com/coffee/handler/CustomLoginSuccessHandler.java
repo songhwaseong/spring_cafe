@@ -60,7 +60,7 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
         String email = user.getUsername() ; // 우리가 사용한 username은 사실 email입니다.
         Member member = memberService.findByEmail(email) ;
 
-        String token = jwtTokenProvider.createToken(member); //
+        String token = jwtTokenProvider.createToken(member, false); //
 
         System.out.println("이거 사용????");
         System.out.println("이거 사용????");
