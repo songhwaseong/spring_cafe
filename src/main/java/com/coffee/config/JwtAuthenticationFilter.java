@@ -55,7 +55,7 @@ doFilterInternal 메소드가 하는 역할
         if (bearer != null && bearer.startsWith("Bearer ")) {  // "Bearer "로 시작하는지 검증
             String token = bearer.substring("Bearer ".length()); // "Bearer " (7글자) 제거
 
-            if (jwtTokenProvider.validateToken(token)) {
+            if (jwtTokenProvider.validateToken(token, request)) {
                 String email = jwtTokenProvider.getEmail(token);
                 Claims claims = jwtTokenProvider.getClaims(token); // payload 전체 정보
                 String role = claims.get("role", String.class); // 역할(Role) 추출

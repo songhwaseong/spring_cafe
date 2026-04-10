@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 public class StringTest {
     public static void main(String[] args) {
-        String str = "Beare hellow World";
+        String str = "Beare.hellow.World";
 
         System.out.println(str.substring("Beare ".length()));
         System.out.println(str.substring("Beare ".length(),"Beare ".length()+"hellow".length()));
@@ -24,5 +24,8 @@ public class StringTest {
         System.out.println(str +" contains " + str.contains("d"));
         System.out.println(str +" repeat " + str.repeat(3));
         System.out.println(str +" join " + String.join(",", "a","b","c","d"));
+        System.out.println(str.split("\\.")[0]);
+
+
     }
 }

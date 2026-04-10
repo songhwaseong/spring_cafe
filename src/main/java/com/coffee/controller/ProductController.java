@@ -41,8 +41,8 @@ public class ProductController {
             }else{
                 return ResponseEntity.badRequest().body(id + "번 상품이 존재하지 않습니다.");
             }
-        }catch (DataIntegrityViolationException err){
-            String message = "해당 상품은 장바구니에 포함되어 있거나, 이미 매출이 발생한 상품입니다.\n확인해 주세요.";
+        }catch (DataIntegrityViolationException err){       //DB 무결성오류시 (foreignKey 같이 제약조건 걸린 데이터 삭제시 exp 발생)
+            String message = "DB 데이터 무결성 오류 \n 관리자 문의바람.";
             return ResponseEntity.badRequest().body(message);
 
         }catch (Exception err){
@@ -53,12 +53,15 @@ public class ProductController {
     @PostMapping("/insert")
     public ResponseEntity<?> insert(@Valid @RequestBody Product product, BindingResult bindingResult) {
         // ✅ 1. 유효성 검사 실패 시
-        if (bindingResult.hasErrors()) {
-            System.out.println("bindingResult");
+        if (bindingResult.hasErrors() || !product.getImage().startsWith("data:image")) {
             System.out.println(bindingResult);
             Map<String, String> errors = new HashMap<>();
             for (FieldError error : bindingResult.getFieldErrors()) {
                 errors.put(error.getField(), error.getDefaultMessage());
+                System.out.println(error.getField() + ": " + error.getDefaultMessage());
+            }
+            if(!product.getImage().startsWith("data:image")){
+                errors.put("image", "이미지를 넣어주시기 바랍니다.");
             }
 
             // 400 Bad Request + 에러 메시지
@@ -85,7 +88,14 @@ public class ProductController {
                             "message", ex.getMessage(),
                             "error", "File saving error"
                     ));
-        } catch (Exception err) { // DB 오류 등
+        } catch (NullPointerException ex) { // 경로 또는 이미지 저장 문제
+            return ResponseEntity
+                    .status(500)
+                    .body(Map.of(
+                            "message", ex.getMessage(),
+                            "error", "bad image file Format"
+                    ));
+        }  catch (Exception err) { // DB 오류 등
             return ResponseEntity
                     .status(500)
                     .body(Map.of(
@@ -116,14 +126,21 @@ public class ProductController {
                                        @Valid @RequestBody Product updatedProduct,
                                        BindingResult bindingResult) {
         // 1. 유효성 검사
-        if (bindingResult.hasErrors()) {
+        if (bindingResult.hasErrors() || !updatedProduct.getImage().startsWith("data:image")) {
+            System.out.println(bindingResult);
             Map<String, String> errors = new HashMap<>();
             for (FieldError error : bindingResult.getFieldErrors()) {
                 errors.put(error.getField(), error.getDefaultMessage());
+                System.out.println(error.getField() + ": " + error.getDefaultMessage());
             }
+            if(!updatedProduct.getImage().startsWith("data:image")){
+                errors.put("image", "이미지를 넣어주시기 바랍니다.");
+            }
+
+            // 400 Bad Request + 에러 메시지
             return new ResponseEntity<>(
                     Map.of(
-                            "message", "상품 수정 유효성 검사에 문제가 있습니다.",
+                            "message", "상품 등록 유효성 검사에 문제가 있습니다.",
                             "errors", errors
                     ),
                     HttpStatus.BAD_REQUEST

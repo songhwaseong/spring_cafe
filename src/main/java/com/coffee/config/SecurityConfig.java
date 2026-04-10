@@ -53,7 +53,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(permitUrls).permitAll()
                         .anyRequest().authenticated()
-                );
+                )
+        ;
 
         // JWT 필터 등록
         http.addFilterBefore(

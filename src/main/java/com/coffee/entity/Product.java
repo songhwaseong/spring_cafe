@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 public class Product {
     // 엔터티 코딩 작성시 database의 제약 조건도 같이 고려해야 합니다.
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "product_id")
     private Long id ;
 
@@ -29,7 +29,7 @@ public class Product {
 
     @Column(nullable = false)
     @Min(value = 100, message = "가격은 100원이상이어야 합니다.") // cf) @Max
-    @Max(value = 10000, message = "가격은 100000원이하이어야 합니다.")
+    @Max(value = 100000, message = "가격은 100000원이하이어야 합니다.")
     private int price ;
 
     @Enumerated(EnumType.STRING)

@@ -5,6 +5,7 @@ import com.coffee.repository.MemberRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,11 +46,11 @@ public class JwtTokenProvider { // JWT 생성, 검증 기능 담당자 클래스
     public String createToken(Member member) { // 매개 변수 : 토큰 안에 사용자 식별값 저장
         // 만료 시간 1시간
         return Jwts.builder()
-                .setClaims(Map.of("role", member.getRole().name()))
                 .setSubject(member.getEmail())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(this.getSigningKey(), SignatureAlgorithm.HS256)
+                .claim("role", member.getRole().name())
                 //.setClaims(Map.of("role", member.getRole().name()))
                 .compact(); // 최종 문자열 생성
     }
@@ -71,10 +72,11 @@ public class JwtTokenProvider { // JWT 생성, 검증 기능 담당자 클래스
                 .getBody();
     }
 
-    public boolean validateToken(String token) { // JWT 토큰 유효성 검사
+    Jws<Claims> claims = null;
+    public boolean validateToken(String token, HttpServletRequest req) { // JWT 토큰 유효성 검사
         try {
 
-            Jws<Claims> claims = Jwts.parserBuilder()
+            claims = Jwts.parserBuilder()
                     .setSigningKey(this.getSigningKey())
                     .build()
                     .parseClaimsJws(token);
@@ -89,13 +91,18 @@ public class JwtTokenProvider { // JWT 생성, 검증 기능 담당자 클래스
             return !claims.getBody().getExpiration().before(new Date());
         } catch (ExpiredJwtException e) {
             System.out.println("토큰 만료됨");
-            throw e;
+            req.setAttribute("exception", "ExpiredJwtException");
+            throw new ExpiredJwtException(null, null, "토큰 만료됨");
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
             System.out.println("토큰 서명/형식 오류");
+            req.setAttribute("exception", "SecurityException");
             throw e;
         } catch (Exception e) {
             System.out.println("기타 토큰 오류");
+            req.setAttribute("exception", "etcException");
             throw e;
+        }finally {
+            req.setAttribute("statusCode", 401);
         }
     }
 }
