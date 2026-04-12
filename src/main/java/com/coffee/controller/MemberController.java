@@ -35,6 +35,17 @@ public class MemberController {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
 
+    @PostMapping("/tokenChk")
+    public ResponseEntity<?> tokenChk(){
+        System.out.println("===================> tokenChk");
+        System.out.println("===================> tokenChk");
+        System.out.println("===================> tokenChk");
+        System.out.println("===================> tokenChk");
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(Map.of("message", "tokenChk"));
+    }
+
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody LoginDto dto){
 
@@ -67,18 +78,25 @@ public class MemberController {
             for (FieldError error : bindingResult.getFieldErrors()) {
                 errors.put(error.getField(), error.getDefaultMessage());
             }
-            return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+            // 400 Bad Request + 에러 메시지
+            return new ResponseEntity<>(
+                    Map.of(
+                            "message", "회원 등록 유효성 검사에 문제가 있습니다.",
+                            "errors", errors
+                    ),
+                    HttpStatus.BAD_REQUEST
+            );
         }
 
         // 2) 이메일 중복 체크
         Member member = memberService.findByEmail(bean.getEmail());
         if (member != null) {
-            return new ResponseEntity<>(Map.of("email", "이미 존재하는 이메일 주소입니다."), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(Map.of("errors", Map.of("email","이미 존재하는 이메일입니다." ),"message", "이미 존재하는 이메일 주소입니다."), HttpStatus.BAD_REQUEST);
         }
 
         // 3) 회원가입 처리
         memberService.insert(bean);
-        return new ResponseEntity<>("회원 가입 성공", HttpStatus.OK);
+        return new ResponseEntity<>(bean, HttpStatus.OK);
     }
 
 }

@@ -1,5 +1,6 @@
 package com.coffee.constant;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.Getter;
 
 @Getter
@@ -9,7 +10,23 @@ public enum Category {
     private final String description ;
 
     Category(String description) {
-        this.description = description ;
+        System.out.println(description);
+        System.out.println(description);
+        System.out.println(description);
+        System.out.println(description);
+        this.description = description.isEmpty() ? "전체" : description ;
+    }
+
+
+    // Controller에서 RequestBody로 값을 받는데 Enum에 없는 값을 RequestBody에 입력했을 때 json parsing error 로 아래와 같이
+    // 해당하는 값이 없을경우 null 값으로 유효성 검사 처리
+    @JsonCreator
+    public static Category getEnumFromValue(String value) {
+        try {
+            return Category.valueOf(value);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
 }

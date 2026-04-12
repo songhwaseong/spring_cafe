@@ -58,10 +58,9 @@ public class ProductController {
             Map<String, String> errors = new HashMap<>();
             for (FieldError error : bindingResult.getFieldErrors()) {
                 errors.put(error.getField(), error.getDefaultMessage());
-                System.out.println(error.getField() + ": " + error.getDefaultMessage());
             }
             if(!product.getImage().startsWith("data:image")){
-                errors.put("image", "이미지를 넣어주시기 바랍니다.");
+                errors.put("image", "이미지 파일을 업로드 부탁드립니다. .jpg, .jpeg .png 등");
             }
 
             // 400 Bad Request + 에러 메시지
@@ -126,15 +125,15 @@ public class ProductController {
                                        @Valid @RequestBody Product updatedProduct,
                                        BindingResult bindingResult) {
         // 1. 유효성 검사
-        if (bindingResult.hasErrors() || !updatedProduct.getImage().startsWith("data:image")) {
+        if (bindingResult.hasErrors() || (updatedProduct.getImage().startsWith("data") && !updatedProduct.getImage().startsWith("data:image"))) {
             System.out.println(bindingResult);
             Map<String, String> errors = new HashMap<>();
             for (FieldError error : bindingResult.getFieldErrors()) {
                 errors.put(error.getField(), error.getDefaultMessage());
                 System.out.println(error.getField() + ": " + error.getDefaultMessage());
             }
-            if(!updatedProduct.getImage().startsWith("data:image")){
-                errors.put("image", "이미지를 넣어주시기 바랍니다.");
+            if(updatedProduct.getImage().startsWith("data") && !updatedProduct.getImage().startsWith("data:image")){
+                errors.put("image", "이미지 파일을 업로드 부탁드립니다. .jpg, .jpeg .png 등");
             }
 
             // 400 Bad Request + 에러 메시지
