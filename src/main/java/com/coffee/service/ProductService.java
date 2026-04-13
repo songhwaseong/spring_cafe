@@ -100,8 +100,7 @@ public class ProductService {
 
         if (product == null ||  product.getImage() == null || !product.getImage().startsWith("data:image")) return null;
 
-        String imageFileName = saveProductImage(product.getImage());
-        product.setImage(imageFileName);
+        product.setImage(saveProductImage(product.getImage()));
 
         //product.setInputdate(LocalDate.now());
         System.out.println("서비스)상품 등록 정보");
@@ -130,34 +129,35 @@ public class ProductService {
 
     // 이전 이미지 파일을 삭제하는 메소드
     private void deleteOldImage(String oldImageFileName) {
-        if (oldImageFileName == null || oldImageFileName.isBlank()) {
-            return;
-        }
+        if (oldImageFileName == null || oldImageFileName.isBlank()) return;
 
         File oldImageFile = new File(productImageLocation + oldImageFileName);
 
-        if (oldImageFile.exists()) {
-            boolean deleted = oldImageFile.delete();
-            if (!deleted) {
-                System.err.println("기존 이미지 삭제 실패 : " + oldImageFileName);
-            }
-        }
+        if(!(oldImageFile.exists() && oldImageFile.delete())) System.err.println("기존 이미지 삭제 실패 : " + oldImageFileName);
     }
 
     // Product 수정
-    public Product updateProduct(Product savedProduct, Product updatedProduct) {
-        savedProduct.setName(updatedProduct.getName());
-        savedProduct.setPrice(updatedProduct.getPrice());
-        savedProduct.setCategory(updatedProduct.getCategory());
-        savedProduct.setStock(updatedProduct.getStock());
-        savedProduct.setDescription(updatedProduct.getDescription());
+    public void updateProduct(Product savedProduct, Product updatedProduct) {
 
-        if (updatedProduct.getImage() != null && updatedProduct.getImage().startsWith("data:image")) {
+        String imageFileName = savedProduct.getImage();
+        if (updatedProduct.getImage() != null && updatedProduct.getImage().startsWith("data:image")){
             deleteOldImage(savedProduct.getImage());
-            String imageFileName = saveProductImage(updatedProduct.getImage());
-            savedProduct.setImage(imageFileName);
+            imageFileName = saveProductImage(updatedProduct.getImage());
         }
 
-        return productRepository.save(savedProduct);
+        savedProduct = Product.builder()
+                        .id(updatedProduct.getId())
+                        .name(updatedProduct.getName())
+                        .price(updatedProduct.getPrice())
+                        .category(updatedProduct.getCategory())
+                        .stock(updatedProduct.getStock())
+                        .description(updatedProduct.getDescription())
+                        .image(imageFileName)
+                        .build();
+        productRepository.save(savedProduct);
+    }
+
+    public Optional<Product> findProductById(Long productId) {
+        return productRepository.findById(productId);
     }
 }

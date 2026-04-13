@@ -4,18 +4,19 @@ import com.coffee.constant.Category;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.* ;
 import jakarta.validation.constraints.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 // 상품 1개에 대한 정보를 저장하고 있는 자바 클래스
-@Getter @Setter @ToString
+@Data
+@Builder
 @Entity
 @Table(name = "products")
+@NoArgsConstructor
+@AllArgsConstructor
 public class Product {
     // 엔터티 코딩 작성시 database의 제약 조건도 같이 고려해야 합니다.
     @Id
@@ -23,7 +24,7 @@ public class Product {
     @Column(name = "product_id")
     private Long id ;
 
-    @Column(nullable = false) // 값 입력 필수
+    @Column(nullable = false) // 값 입력 getImage
     @NotBlank(message = "상품 이름은 필수 입력 사항입니다.")
     private String name ;
 

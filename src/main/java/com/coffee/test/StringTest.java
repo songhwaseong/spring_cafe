@@ -1,5 +1,7 @@
 package com.coffee.test;
 
+import com.coffee.entity.Product;
+
 import java.util.Arrays;
 
 public class StringTest {
@@ -25,7 +27,17 @@ public class StringTest {
         System.out.println(str +" repeat " + str.repeat(3));
         System.out.println(str +" join " + String.join(",", "a","b","c","d"));
         System.out.println(str.split("\\.")[0]);
+        if(findProduct() && findProduct2()){
+            System.out.println("확인 확인");
+        }
+    }
 
-
+    public static boolean findProduct() {
+        System.out.println("findProduct 실행");
+        return false;
+    }
+    public static boolean findProduct2() {
+        System.out.println("findProduct2 실행");
+        return true;
     }
 }

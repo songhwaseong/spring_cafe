@@ -10,10 +10,6 @@ public enum Category {
     private final String description ;
 
     Category(String description) {
-        System.out.println(description);
-        System.out.println(description);
-        System.out.println(description);
-        System.out.println(description);
         this.description = description.isEmpty() ? "전체" : description ;
     }
 

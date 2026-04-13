@@ -37,10 +37,6 @@ public class MemberController {
 
     @PostMapping("/tokenChk")
     public ResponseEntity<?> tokenChk(){
-        System.out.println("===================> tokenChk");
-        System.out.println("===================> tokenChk");
-        System.out.println("===================> tokenChk");
-        System.out.println("===================> tokenChk");
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(Map.of("message", "tokenChk"));

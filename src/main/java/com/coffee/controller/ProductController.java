@@ -74,6 +74,8 @@ public class ProductController {
         }
 
         // ✅ 2. 상품 등록 시도
+        String message = "";
+        String error = "";
         try {
             Product savedProduct = productService.insertProduct(product);
             return ResponseEntity.ok(Map.of(
@@ -81,43 +83,34 @@ public class ProductController {
                     "image", savedProduct.getImage()
             ));
         } catch (IllegalStateException ex) { // 경로 또는 이미지 저장 문제
-            return ResponseEntity
-                    .status(500)
-                    .body(Map.of(
-                            "message", ex.getMessage(),
-                            "error", "File saving error"
-                    ));
+            message =  ex.getMessage();
+            error =  "File saving error";
         } catch (NullPointerException ex) { // 경로 또는 이미지 저장 문제
-            return ResponseEntity
-                    .status(500)
-                    .body(Map.of(
-                            "message", ex.getMessage(),
-                            "error", "bad image file Format"
-                    ));
+            message =  ex.getMessage();
+            error =  "bad image file Format";
         }  catch (Exception err) { // DB 오류 등
-            return ResponseEntity
-                    .status(500)
-                    .body(Map.of(
-                            "message", err.getMessage(),
-                            "error", "Internal Server Error"
-                    ));
+            message =  err.getMessage();
+            error =  "Internal Server Error";
         }
+        return ResponseEntity
+                .status(500)
+                .body(Map.of(
+                        "message", message,
+                        "error", error
+                ));
     }
 
     // 상품 수정 페이지 get 방식
     // 프론트 앤드의 상품 수정 페이지에서 요청이 들어 왔습니다.
     @GetMapping("/update/{id}") // 상품의 id 정보를 이용하여 해당 상품 Bean 객체를 반환해 줍니다.
-    public ResponseEntity<Product> getUpdate(@PathVariable Long id){
+    public ResponseEntity<?> getUpdate(@PathVariable Long id){
         System.out.println("수정할 상품 번호 : " + id);
 
-        Product product = this.productService.getProductById(id) ;
+        Optional<Product> product = this.productService.findById(id) ;
 
-        if(product == null){ // 상품이 없으면 404 응답과 함께 null을 반환
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-
-        }else{ // 해당 상품의 정보와 함께, 성공(200) 메시지를 반환합니다.
-            return ResponseEntity.ok(product);
-        }
+        return product.isEmpty()
+                ? ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("item","no"))
+                : ResponseEntity.ok(product.get());
     }
 
     @PutMapping("/update/{id}")
@@ -126,7 +119,6 @@ public class ProductController {
                                        BindingResult bindingResult) {
         // 1. 유효성 검사
         if (bindingResult.hasErrors() || (updatedProduct.getImage().startsWith("data") && !updatedProduct.getImage().startsWith("data:image"))) {
-            System.out.println(bindingResult);
             Map<String, String> errors = new HashMap<>();
             for (FieldError error : bindingResult.getFieldErrors()) {
                 errors.put(error.getField(), error.getDefaultMessage());
@@ -170,15 +162,12 @@ public class ProductController {
     }
 
     @GetMapping("/detail/{id}") // 프론트 엔드가 상품에 대한 상세 정보를 요청하였습니다.
-    public ResponseEntity<Product> detail(@PathVariable Long id){
-        Product product = this.productService.getProductById(id) ;
+    public ResponseEntity<?> detail(@PathVariable Long id){
+        Optional<Product> product = this.productService.findById(id) ;
 
-        if(product == null){ // 404 응답
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build() ;
-
-        }else{ // 200 ok 응답
-            return ResponseEntity.ok(product) ;
-        }
+        return product.isEmpty()
+                ? ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("item","no"))
+                : ResponseEntity.ok(product.get());
     }
 }
 
