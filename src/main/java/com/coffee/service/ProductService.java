@@ -1,10 +1,14 @@
 package com.coffee.service;
 
+import com.coffee.entity.CartProduct;
 import com.coffee.entity.Product;
+import com.coffee.repository.CartProductRepository;
 import com.coffee.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -19,13 +23,22 @@ public class ProductService {
     @Autowired
     private ProductRepository productRepository ;
 
+    @Autowired
+    private CartProductRepository cartProductRepository;
+
     /*상품 목록 가져 오기*/
     public List<Product> getProductList() {
         return this.productRepository.findProductByOrderByIdDesc();
     }
 
     /*상품 삭제 기능*/
-    public boolean deleteProduct(Long id) {
+    public boolean deleteProduct(Long id) throws DataIntegrityViolationException {
+
+        List<CartProduct> cpList =  cartProductRepository.findAll();
+        if(cpList.stream().filter(p-> p.getProduct() != null).anyMatch(p-> p.getProduct().getId().equals(id))){
+            throw new DataIntegrityViolationException("카트에 해당상품 담겨있음");
+        }
+
         // 1. 상품 조회 (한 번만 조회)
         Product product = productRepository.findById(id).orElse(null);
 

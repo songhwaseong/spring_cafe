@@ -1,15 +1,15 @@
 package com.coffee.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 // 장바구니에 담을 상품에 대한 정보를 가지고 있는 엔터티 클래스입니다.
 @Data
 @Entity
+@Builder
 @Table(name = "cart_products")
+@NoArgsConstructor
+@AllArgsConstructor
 public class CartProduct {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

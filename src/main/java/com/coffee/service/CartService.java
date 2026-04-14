@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 
 @Slf4j
@@ -31,18 +32,20 @@ public class CartService {
     }
 
     private CartProduct findExistingProduct(Cart cart, Product product) {
-        if (cart.getCartProducts() == null) return null;
 
-        for (CartProduct cp : cart.getCartProducts()) {
-            if (cp.getProduct().getId().equals(product.getId())) {
-                return cp;
-            }
-        }
-        return null;
+        return cart.getCartProducts() != null
+                ? cart.getCartProducts()
+                    .stream()
+                    .filter(p-> p.getProduct() != null)
+                    .filter(p-> Objects.equals(p.getProduct().getId(), product.getId()))
+                    .findFirst()
+                    .orElse(null)
+                : null;
     }
     // import org.springframework.transaction.annotation.Transactional;
     @Transactional
     public String addProductToCart(CartProductDto dto, String email) throws Exception {
+
         Member member = memberRepository.findByEmail(email);
 
         if (member == null) {
@@ -82,18 +85,19 @@ public class CartService {
             existingCartProduct.setQuantity(existingCartProduct.getQuantity() + dto.getQuantity());
             cartProductService.saveCartProduct(existingCartProduct);
         } else {
-            CartProduct cp = new CartProduct();
-            cp.setCart(cart);
-            cp.setProduct(product);
-            cp.setQuantity(dto.getQuantity());
-            cartProductService.saveCartProduct(cp);
+            cartProductService.saveCartProduct(CartProduct
+                    .builder()
+                    .cart(cart)
+                    .product(product)
+                    .quantity(dto.getQuantity())
+                    .build());
         }
 
         return "요청하신 상품이 장바구니에 추가되었습니다.";
     }
 
     /* 특정 회원이 가지고 있는 카트 상품 목록을 조회해주는 메소드입니다. */
-    public List<CartItemDto> getCartItemsByMemberId(Long memberId) {
+    public List<CartItemDto> getCartItemsByMemberId(Long memberId) throws  Exception {
         // 1. 회원 조회
         Member member = memberService.findMemberById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 회원입니다."));

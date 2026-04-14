@@ -24,9 +24,7 @@ public class ProductController {
 
     @GetMapping("/list") // 상품 목록을 List 컬렉션으로 반환해 줍니다.
     public List<Product> list(){
-        List<Product> products = this.productService.getProductList() ;
-
-        return products ;
+        return this.productService.getProductList() ;
     }
 
     // 클라이언트가 특정 상품 id에 대하여 "삭제" 요청을 하였습니다.
@@ -42,8 +40,8 @@ public class ProductController {
                 return ResponseEntity.badRequest().body(id + "번 상품이 존재하지 않습니다.");
             }
         }catch (DataIntegrityViolationException err){       //DB 무결성오류시 (foreignKey 같이 제약조건 걸린 데이터 삭제시 exp 발생)
-            String message = "DB 데이터 무결성 오류 \n 관리자 문의바람.";
-            return ResponseEntity.badRequest().body(message);
+            //String message = "DB 데이터 무결성 오류 \n 관리자 문의바람.";
+            return ResponseEntity.badRequest().body(err.getMessage());
 
         }catch (Exception err){
             return ResponseEntity.internalServerError().body("오류 발생 : " + err.getMessage());

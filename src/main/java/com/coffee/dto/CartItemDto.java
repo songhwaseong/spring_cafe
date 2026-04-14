@@ -1,13 +1,13 @@
 package com.coffee.dto;
 
 import com.coffee.entity.CartProduct;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
 // 리액트의 CartList.tsx 파일에서 fetchCartProducts() 함수 참조
 // `장바구니` 목록 페이지에서 데이터 1개를 의미하는 자바 DTO 클래스
-@Getter
-@Setter
+@Data
 public class CartItemDto {
     private Long cartProductId; // 카트 상품의 id로써, `수량의 변경`이나 `삭제`시 반드시 사용됩니다.
     private Long productId; // 상품의 id

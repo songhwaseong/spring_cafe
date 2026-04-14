@@ -7,12 +7,14 @@ import com.coffee.service.CartProductService;
 import com.coffee.service.CartService;
 import com.coffee.service.MemberService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/cart")
 @RequiredArgsConstructor
@@ -24,31 +26,27 @@ public class CartController {
             @RequestBody CartProductDto dto,
             Authentication authentication
     ) {
-        String email = authentication.getName(); // JWT에서 꺼낸 사용자
-        String message = "";
         try {
-            message = cartService.addProductToCart(dto, email);
+            return ResponseEntity.ok(cartService.addProductToCart(dto, authentication.getName()));
         }catch (Exception e){
-            return ResponseEntity.ok(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-        return ResponseEntity.ok(message);
+
     }
 
     private final MemberService memberService ;
 
     @GetMapping("/list")
-    public ResponseEntity<List<CartItemDto>> getCartProducts(Authentication authentication) {
+    public ResponseEntity<?> getCartProducts(Authentication authentication) {
 
         String email = authentication.getName();
 
         Member member = memberService.findByEmail(email);
-        if(member == null){
-            new RuntimeException("사용자 없음");
+        try{
+            return ResponseEntity.ok(cartService.getCartItemsByMemberId(member.getId()));
+        }catch (Exception e){
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-
-        return ResponseEntity.ok(
-                cartService.getCartItemsByMemberId(member.getId())
-        );
     }
 
     // 장바구니 내의 특정 상품 수량 변경
