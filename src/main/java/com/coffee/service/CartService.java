@@ -67,9 +67,9 @@ public class CartService {
 //        Product product = productOptional.get();
 
         // 2. 재고 확인
-        if (product.getStock() < dto.getQuantity()) {
-            throw new IllegalArgumentException("재고 수량이 부족합니다.");
-        }
+//        if (product.getStock() < dto.getQuantity()) {
+//            throw new IllegalArgumentException("재고 수량이 부족합니다.");
+//        }
 
         // 3. Cart 조회 또는 생성
         Cart cart = cartRepository.findByMember(member).orElse(null);
@@ -82,6 +82,11 @@ public class CartService {
         // 4. 기존 상품 있는지 확인 후 수량 처리
         CartProduct existingCartProduct = findExistingProduct(cart, product);
         if (existingCartProduct != null) {
+            // 2. 재고 확인
+            if (product.getStock() < existingCartProduct.getQuantity() + dto.getQuantity()) {
+                throw new IllegalArgumentException("재고 수량이 부족합니다.");
+            }
+
             existingCartProduct.setQuantity(existingCartProduct.getQuantity() + dto.getQuantity());
             cartProductService.saveCartProduct(existingCartProduct);
         } else {

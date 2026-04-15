@@ -1,5 +1,6 @@
 package com.coffee.dto;
 
+import com.coffee.constant.Category;
 import com.coffee.entity.CartProduct;
 import lombok.Data;
 import lombok.Getter;
@@ -16,6 +17,7 @@ public class CartItemDto {
     private int price ; // 단가
     private int quantity ; // 구매 또는 장바구니에 담을 수량
     private boolean checked = false ; // 카트 상품 목록에서 체크 여부
+    private Category category; //카테고리
 
     public CartItemDto(CartProduct cartProduct) {
         this.cartProductId = cartProduct.getId();
@@ -24,5 +26,6 @@ public class CartItemDto {
         this.image = cartProduct.getProduct().getImage() ;
         this.price = cartProduct.getProduct().getPrice() ;
         this.quantity = cartProduct.getQuantity() ;
+        this.category = cartProduct.getProduct().getCategory();
     }
 }

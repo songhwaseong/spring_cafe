@@ -13,6 +13,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
+import java.util.List;
+
 
 @Slf4j
 @RestController
@@ -60,22 +63,32 @@ public class CartController {
         System.out.println("카트 상품 아이디 : " + cartProductId);
         System.out.println("변경할 갯수 : " + quantity);
 
-        String message = cartProductService.editCartProductQuantity(cartProductId, quantity);
-
-        if (message.startsWith("오류:")) {
-            return ResponseEntity.badRequest().body(message);
+        try{
+            return ResponseEntity.ok(cartProductService.editCartProductQuantity(cartProductId, quantity));
+        }catch (Exception e){
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-
-        return ResponseEntity.ok(message);
     }
+
     @DeleteMapping("/delete/{cartProductId}")
     public ResponseEntity<String> deleteCartProduct(@PathVariable Long cartProductId){
         System.out.println("삭제할 카트 상품 아이디 : " + cartProductId);
 
         cartProductService.deleteCartProductById(cartProductId);
 
-        String message = "카트 상품 " + cartProductId + "번이 장바구니 목록에서 삭제 되었습니다.";
-        return ResponseEntity.ok(message) ;
+        return ResponseEntity.ok("카트 상품 " + cartProductId + "번이 장바구니 목록에서 삭제 되었습니다.") ;
+    }
+
+    @DeleteMapping("/deleteList")
+    public ResponseEntity<String> deleteCartProducts(@RequestBody List<Long> cartProductId){
+
+        log.info("====================> {}", cartProductId);
+        log.info("====================> {}", cartProductId);
+        log.info("====================> {}", cartProductId);
+
+        cartProductId.forEach(cartProductService::deleteCartProductById);
+
+        return ResponseEntity.ok("카트 상품 " + cartProductId + "번이 장바구니 목록에서 삭제 되었습니다.") ;
     }
 
 }
