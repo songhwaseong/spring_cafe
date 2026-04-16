@@ -135,7 +135,7 @@ public class OrderService {
             List<OrderDetailDto.OrderItem> orderItems = new ArrayList<>();
             for (OrderProduct op : order.getOrderProducts()) {
                 OrderDetailDto.OrderItem item =
-                        new OrderDetailDto.OrderItem(op.getProduct().getName(), op.getQuantity(), op.getPrice());
+                        new OrderDetailDto.OrderItem(op.getProduct().getId(),op.getProduct().getName(), op.getQuantity(), op.getPrice());
                 orderItems.add(item);
             }
 

@@ -30,6 +30,7 @@ public class OrderDetailDto {
     @Data
     @AllArgsConstructor // 만약 상품에 대한 추가 정보가 더 필요하면 하단에 변수를 추가하세요.
     public static class OrderItem{ // 내부 정적 클래스 정의
+        private long productId;
         private String productName ; // 상품 이름
         private int quantity ; // 주문 수량
         private int price ; // 주문 금액
