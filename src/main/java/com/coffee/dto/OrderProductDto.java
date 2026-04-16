@@ -1,5 +1,6 @@
 package com.coffee.dto;
 
+import jakarta.validation.constraints.Min;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -14,6 +15,7 @@ public class OrderProductDto {
     // 변수 cartProductId는 '카트 목록 보기(CartList.)' 메뉴에서만 사용이 됩니다.
     private Long cartProductId ; // 카트 상품 번호
     private Long productId ; // 상품 번호
+    @Min(value = 10, message = "구매 수량은 1개 이상이어야 합니다.")
     private int quantity ; // 구매 수량
     private int price ; //  구매 금액
 }

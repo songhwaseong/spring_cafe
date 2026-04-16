@@ -38,6 +38,9 @@ public class OrderService {
      */
     @Transactional
     public Order createOrder(OrderDto dto) throws Exception {
+        if(dto.getOrderItems().stream().anyMatch(p-> p.getQuantity() < 1)){
+            throw new RuntimeException("상품당 구매수량이 1개 이상 이어야 합니다.");
+        }
         // 1. 회원 확인
         Optional<Member> optionalMember = memberService.findMemberById(dto.getMemberId());
         if (optionalMember.isEmpty()) {
