@@ -112,8 +112,11 @@ public class CartService {
                 .orElseGet(Cart::new); // 없으면 빈 카트 생성
 
         // 3. CartProduct → CartItemDto 변환
-        return cart.getCartProducts().stream()
-                .map(CartItemDto::new)  //생성자를 통해서 값을넘김
-                .toList();
+        return cart.getCartProducts() != null
+                ? cart.getCartProducts().stream()
+                       .map(CartItemDto::new)  //생성자를 통해서 값을넘김
+                       .toList()
+                : null
+                ;
     }
 }

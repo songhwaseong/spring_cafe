@@ -1,8 +1,10 @@
 package com.coffee.service;
 
 import com.coffee.entity.CartProduct;
+import com.coffee.entity.Order;
 import com.coffee.entity.Product;
 import com.coffee.repository.CartProductRepository;
+import com.coffee.repository.OrderRepository;
 import com.coffee.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,6 +26,9 @@ public class ProductService {
     private ProductRepository productRepository ;
 
     @Autowired
+    private OrderRepository orderRepository;
+
+    @Autowired
     private CartProductRepository cartProductRepository;
 
     /*상품 목록 가져 오기*/
@@ -37,6 +42,11 @@ public class ProductService {
         List<CartProduct> cpList =  cartProductRepository.findAll();
         if(cpList.stream().filter(p-> p.getProduct() != null).anyMatch(p-> p.getProduct().getId().equals(id))){
             throw new DataIntegrityViolationException("카트에 해당상품 담겨있음");
+        }
+
+        List<Order> orderList = orderRepository.findAll();
+        if(orderList.stream().map(Order::getOrderProducts).anyMatch(p-> p.stream().anyMatch(q -> q.getProduct().getId().equals(id)))){
+            throw new DataIntegrityViolationException("주문내역에 해당 상품이 있어서 삭제 불능");
         }
 
         // 1. 상품 조회 (한 번만 조회)
@@ -172,5 +182,9 @@ public class ProductService {
 
     public Optional<Product> findProductById(Long productId) {
         return productRepository.findById(productId);
+    }
+
+    public void save(Product product) {
+        productRepository.save(product);
     }
 }
