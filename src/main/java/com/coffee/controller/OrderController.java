@@ -27,22 +27,7 @@ public class OrderController {
 
     /* 리액트에서 '주문하기' 버튼 클릭 시 호출되는 엔드포인트 */
     @PostMapping("")
-    public ResponseEntity<?> order(@Valid @RequestBody OrderDto dto, BindingResult bindingResult) {
-        // 1) 유효성 검사 결과 확인
-        if (bindingResult.hasErrors()) {
-            Map<String, String> errors = new HashMap<>();
-            for (FieldError error : bindingResult.getFieldErrors()) {
-                errors.put(error.getField(), error.getDefaultMessage());
-            }
-            // 400 Bad Request + 에러 메시지
-            return new ResponseEntity<>(
-                    Map.of(
-                            "message", "주문에 문제가 있습니다.",
-                            "errors", errors
-                    ),
-                    HttpStatus.BAD_REQUEST
-            );
-        }
+    public ResponseEntity<?> order(@RequestBody OrderDto dto) {
         System.out.println("주문 요청 DTO: " + dto);
 
         // 핵심 로직은 서비스로 위임
