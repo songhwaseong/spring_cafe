@@ -51,7 +51,7 @@ public class ProductController {
     @PostMapping("/insert")
     public ResponseEntity<?> insert(@Valid @RequestBody Product product, BindingResult bindingResult) {
         // ✅ 1. 유효성 검사 실패 시
-        if (bindingResult.hasErrors() || !product.getImage().startsWith("data:image")) {
+        if (bindingResult.hasErrors() || !product.getImage().startsWith("data:image") || product.getStock() < 10  || product.getStock() > 1000) {
             System.out.println(bindingResult);
             Map<String, String> errors = new HashMap<>();
             for (FieldError error : bindingResult.getFieldErrors()) {
@@ -59,6 +59,10 @@ public class ProductController {
             }
             if(!product.getImage().startsWith("data:image")){
                 errors.put("image", "이미지 파일을 업로드 부탁드립니다. .jpg, .jpeg .png 등");
+            }
+
+            if(product.getStock() < 10 || product.getStock() > 1000){
+                errors.put("stock", "재고 수량은 10개 이상 1000개 이하 이어야 합니다.");
             }
 
             // 400 Bad Request + 에러 메시지
@@ -116,7 +120,7 @@ public class ProductController {
                                        @Valid @RequestBody Product updatedProduct,
                                        BindingResult bindingResult) {
         // 1. 유효성 검사
-        if (bindingResult.hasErrors() || (updatedProduct.getImage().startsWith("data") && !updatedProduct.getImage().startsWith("data:image"))) {
+        if (bindingResult.hasErrors() || (updatedProduct.getImage().startsWith("data") && !updatedProduct.getImage().startsWith("data:image")) || updatedProduct.getStock() < 10  || updatedProduct.getStock() > 1000) {
             Map<String, String> errors = new HashMap<>();
             for (FieldError error : bindingResult.getFieldErrors()) {
                 errors.put(error.getField(), error.getDefaultMessage());
@@ -124,6 +128,9 @@ public class ProductController {
             }
             if(updatedProduct.getImage().startsWith("data") && !updatedProduct.getImage().startsWith("data:image")){
                 errors.put("image", "이미지 파일을 업로드 부탁드립니다. .jpg, .jpeg .png 등");
+            }
+            if(updatedProduct.getStock() < 10 || updatedProduct.getStock() > 1000){
+                errors.put("stock", "재고 수량은 10개 이상 1000개 이하 이어야 합니다.");
             }
 
             // 400 Bad Request + 에러 메시지

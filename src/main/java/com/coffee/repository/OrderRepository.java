@@ -25,8 +25,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     // 주의 사항
     // 1. 테이블 이름 대신 Entity 이름을 명시
     // 2. 대소문자 구분합니다.
-    @Modifying // 이 쿼리는 select 구문이 아니고, 데이터 변경을 위한 쿼리입니다.
-    @Transactional // import jakarta.transaction.Transactional;
-    @Query("update Order o set o.status = :status where o.id = :orderId")
-    int updateOrderStatus(@Param("orderId") Long orderId, @Param("status") OrderStatus status);
+//    @Modifying // 이 쿼리는 select 구문이 아니고, 데이터 변경을 위한 쿼리입니다.
+//    @Transactional // import jakarta.transaction.Transactional;
+//    @Query("update Order o set o.status = :status, o.manageId = :manageId where o.id = :orderId")
+//    int updateOrderStatusAndManageId(@Param("orderId") Long orderId, @Param("manageId") Long manageId, @Param("status") OrderStatus status);
 }

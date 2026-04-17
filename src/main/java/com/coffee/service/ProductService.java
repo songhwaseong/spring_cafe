@@ -1,19 +1,21 @@
 package com.coffee.service;
 
-import com.coffee.entity.CartProduct;
-import com.coffee.entity.Order;
+import com.coffee.constant.Category;
 import com.coffee.entity.Product;
-import com.coffee.repository.CartProductRepository;
-import com.coffee.repository.OrderRepository;
 import com.coffee.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
@@ -25,43 +27,46 @@ public class ProductService {
     @Autowired
     private ProductRepository productRepository ;
 
-    @Autowired
-    private OrderRepository orderRepository;
-
-    @Autowired
-    private CartProductRepository cartProductRepository;
-
     /*상품 목록 가져 오기*/
     public List<Product> getProductList() {
         return this.productRepository.findProductByOrderByIdDesc();
     }
 
+//    public Page<Product> listProducts(Pageable pageable) {
+//        return this.productRepository.findAll(pageable);
+//    }
+
+
+    @Value("${productImageLocation}")
+    private String productImageLocation ;
+
     /*상품 삭제 기능*/
-    public boolean deleteProduct(Long id) throws DataIntegrityViolationException {
+    @Transactional
+    public boolean deleteProduct(Long id) {
 
-        List<CartProduct> cpList =  cartProductRepository.findAll();
-        if(cpList.stream().filter(p-> p.getProduct() != null).anyMatch(p-> p.getProduct().getId().equals(id))){
-            throw new DataIntegrityViolationException("카트에 해당상품 담겨있음");
-        }
-
-        List<Order> orderList = orderRepository.findAll();
-        if(orderList.stream().map(Order::getOrderProducts).anyMatch(p-> p.stream().anyMatch(q -> q.getProduct().getId().equals(id)))){
-            throw new DataIntegrityViolationException("주문내역에 해당 상품이 있어서 삭제 불능");
-        }
-
-        // 1. 상품 조회 (한 번만 조회)
         Product product = productRepository.findById(id).orElse(null);
 
         if (product == null) {
             return false;
         }
-        // 2. 이미지 삭제 (있으면)
+
         String fileName = product.getImage();
 
+        try {
+            // DB 먼저 삭제
+            productRepository.deleteById(id);
+
+        } catch (Exception e) {
+            // DB 실패 → 이미지 건드리지 않음
+            throw e; // 트랜잭션 롤백
+        }
+
+        // DB 성공 후 이미지 삭제
         if (fileName != null && !fileName.isEmpty()) {
             File file = new File(productImageLocation + fileName);
 
-            System.out.println("삭제될 이미지 이름: " + file.getName());
+            System.out.println("삭제될 파일 이름");
+            System.out.println(file.getAbsolutePath());
 
             if (file.exists()) {
                 boolean deleted = file.delete();
@@ -72,23 +77,18 @@ public class ProductService {
             }
         }
 
-        // 3. DB 삭제 (항상 실행)
-        productRepository.deleteById(id);
-
         return true;
     }
 
     /* 상품 등록 기능 */
     // import org.springframework.beans.factory.annotation.Value;
     // 상품 등록하기
-    @Value("${productImageLocation}")
-    private String productImageLocation; // 기본 값 : null
 
     // Base64 인코딩 문자열을 변환하여 이미지로 만들고, 저장해주는 메소드입니다.
     private String saveProductImage(String base64Image) {
         // 데이터 베이스와 이미지 경로에 저장될 이미지의 이름
         // 현재 시각을 '년월일시분' 포맷으로 변환 (예: 202510171430)
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
         String formattedNow = LocalDateTime.now().format(formatter);
 
         // 데이터 베이스와 이미지 경로에 저장될 이미지의 이름
@@ -97,17 +97,12 @@ public class ProductService {
         // String 클래스 공부 : endsWith(), split() 메소드
 
         File imageFile = new File(productImageLocation  + imageFileName);
-        System.out.println("이미지 이름1 : "+imageFileName);
-        System.out.println("이미지 이름2 : "+imageFile.getName());
+        System.out.println("이미지 이름");
+        System.out.println(imageFile.getName());
 
         // base64Image : JavaScript FileReader API에 만들어진 이미지입니다.
         // 메소드 체이닝 : 점을 연속적으로 찍어서 메소드를 계속 호출하는 것
-        byte[] decodedImage = null;
-
-        if(base64Image != null && base64Image.split(",").length > 1) {
-            decodedImage = Base64.getDecoder().decode(base64Image.split(",")[1]);
-        }
-
+        byte[] decodedImage = Base64.getDecoder().decode(base64Image.split(",")[1]);
 
         // FileOutputStream는 바이트 파일을 처리해주는 자바의 Stream 클래스
         // 파일 정보를 byte 단위로 변환하여 이미지를 복사합니다.
@@ -119,19 +114,39 @@ public class ProductService {
         }
     }
 
-    public Product insertProduct(Product product) {
+    @Transactional
+    public Product insertProduct(Product product){
+        // product는 리액트에서 넘어온 상품 등록을 위한 정보입니다.
+        if(product.getImage() == null || !product.getImage().startsWith("data:image")){
+            throw new RuntimeException("이미지 정보가 올바르지 않습니다.");
+        }
 
-        if (product == null ||  product.getImage() == null || !product.getImage().startsWith("data:image")) return null;
+        String imageFileName = null;
 
-        product.setImage(saveProductImage(product.getImage()));
+        try {
+            // 이미지 저장
+            imageFileName = this.saveProductImage(product.getImage());
 
-        //product.setInputdate(LocalDate.now());
-        System.out.println("서비스)상품 등록 정보");
-        System.out.println(product);
+            // 데이터 베이스에는 product_년월일시분초.jpg 형식으로 저장되어야 합니다.
+            product.setImage(imageFileName);
+            //product.setInputdate(LocalDate.now());
 
-        // save() 메소드는 CrudRepository에 포함되어 있습니다.
-        return productRepository.save(product);
+            System.out.println("서비스 클래스에서 상품 등록 정보 확인");
+            System.out.println(product);
+
+            // DB 저장
+            return this.productRepository.save(product);
+
+        } catch (Exception e) {
+            // DB 저장 실패 시 이미지 삭제
+            if (imageFileName != null) {
+                deleteOldImage(imageFileName);
+            }
+
+            throw e; // 반드시 다시 던져야 트랜잭션 롤백됨
+        }
     }
+
 
     /* 상품 수정 기능 */
     // 상품 수정하기 get 방식 시작
@@ -152,32 +167,47 @@ public class ProductService {
 
     // 이전 이미지 파일을 삭제하는 메소드
     private void deleteOldImage(String oldImageFileName) {
-        if (oldImageFileName == null || oldImageFileName.isBlank()) return;
+        if (oldImageFileName == null || oldImageFileName.isBlank()) {
+            return;
+        }
 
         File oldImageFile = new File(productImageLocation + oldImageFileName);
 
-        if(!(oldImageFile.exists() && oldImageFile.delete())) System.err.println("기존 이미지 삭제 실패 : " + oldImageFileName);
+        if (oldImageFile.exists()) {
+            boolean deleted = oldImageFile.delete();
+            if (!deleted) {
+                System.err.println("기존 이미지 삭제 실패 : " + oldImageFileName);
+            }
+        }
     }
 
     // Product 수정
-    public void updateProduct(Product savedProduct, Product updatedProduct) {
+    @Transactional // import org.springframework.transaction.annotation.Transactional;
+    public Product updateProduct(Product savedProduct, Product updatedProduct) {
+        // TransactionSynchronizationManager 라는 항목이 있슴
 
-        String imageFileName = savedProduct.getImage();
-        if (updatedProduct.getImage() != null && updatedProduct.getImage().startsWith("data:image")){
-            deleteOldImage(savedProduct.getImage());
-            imageFileName = saveProductImage(updatedProduct.getImage());
+        String oldImage = savedProduct.getImage();
+        String newImageFileName = null;
+
+        if (updatedProduct.getImage() != null && updatedProduct.getImage().startsWith("data:image")) {
+            newImageFileName = saveProductImage(updatedProduct.getImage());
+            savedProduct.setImage(newImageFileName);
         }
 
-        savedProduct = Product.builder()
-                        .id(updatedProduct.getId())
-                        .name(updatedProduct.getName())
-                        .price(updatedProduct.getPrice())
-                        .category(updatedProduct.getCategory())
-                        .stock(updatedProduct.getStock())
-                        .description(updatedProduct.getDescription())
-                        .image(imageFileName)
-                        .build();
-        productRepository.save(savedProduct);
+        savedProduct.setName(updatedProduct.getName());
+        savedProduct.setPrice(updatedProduct.getPrice());
+        savedProduct.setCategory(updatedProduct.getCategory());
+        savedProduct.setStock(updatedProduct.getStock());
+        savedProduct.setDescription(updatedProduct.getDescription());
+
+        Product result = productRepository.save(savedProduct);
+
+        // DB 저장 성공 후 삭제
+        if (newImageFileName != null && oldImage != null) {
+            deleteOldImage(oldImage);
+        }
+
+        return result;
     }
 
     public Optional<Product> findProductById(Long productId) {
@@ -187,4 +217,10 @@ public class ProductService {
     public void save(Product product) {
         productRepository.save(product);
     }
+
+
+
+
+
+
 }

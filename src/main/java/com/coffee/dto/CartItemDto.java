@@ -18,6 +18,7 @@ public class CartItemDto {
     private int quantity ; // 구매 또는 장바구니에 담을 수량
     private boolean checked = false ; // 카트 상품 목록에서 체크 여부
     private Category category; //카테고리
+    private int stock;
 
     public CartItemDto(CartProduct cartProduct) {
         this.cartProductId = cartProduct.getId();
@@ -27,5 +28,6 @@ public class CartItemDto {
         this.price = cartProduct.getProduct().getPrice() ;
         this.quantity = cartProduct.getQuantity() ;
         this.category = cartProduct.getProduct().getCategory();
+        this.stock = cartProduct.getProduct().getStock();
     }
 }

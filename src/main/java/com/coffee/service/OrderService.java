@@ -123,24 +123,30 @@ public class OrderService {
         List<OrderDetailDto> responseDtos = new ArrayList<>();
 
         for (Order order : orders) {
-            // 주문의 기초 정보 셋팅
-            OrderDetailDto dto = new OrderDetailDto();
-            dto.setOrderId(order.getId());
-            dto.setName(order.getMember().getName()); //
-            dto.setOrderDate(order.getOrderdate());
-            dto.setStatus(order.getStatus().name());
-            dto.setEmail(order.getMember().getEmail());
 
             // `주문 상품` 여러 개에 대한 셋팅
             List<OrderDetailDto.OrderItem> orderItems = new ArrayList<>();
             for (OrderProduct op : order.getOrderProducts()) {
-                OrderDetailDto.OrderItem item =
-                        new OrderDetailDto.OrderItem(op.getProduct().getId(),op.getProduct().getName(), op.getQuantity(), op.getPrice());
-                orderItems.add(item);
+                orderItems.add(OrderDetailDto.OrderItem.builder()
+                        .productId(op.getProduct().getId())
+                        .productName(op.getProduct().getName())
+                        .quantity(op.getQuantity())
+                        .price(op.getPrice())
+                        .build()
+                );
             }
-
-            dto.setOrderItems(orderItems);
-            responseDtos.add(dto);
+            // 주문의 기초 정보 셋팅
+            responseDtos.add(
+                    OrderDetailDto.builder()
+                    .orderId(order.getId())
+                    .name(order.getMember().getName())
+                    .orderDate(order.getOrderdate())
+                    .status(order.getStatus().name())
+                    .email(order.getMember().getEmail())
+                    .orderItems(orderItems)
+                    .manageId(order.getManageId())
+                    .build()
+            );
         }
 
         return responseDtos;
@@ -148,7 +154,7 @@ public class OrderService {
 
     // 관리자가 수행하는 주문된 상품에 대한 `완료` 처리 기능
     @Transactional
-    public String updateOrderStatus(Long orderId, OrderStatus newStatus) {
+    public String updateOrderStatus(Long orderId, Long manageId, OrderStatus newStatus) {
 
         // 1. 주문 존재 여부 확인
         Order order = orderRepository.findById(orderId)
@@ -163,19 +169,18 @@ public class OrderService {
         if(OrderStatus.CANCELED.equals(newStatus)){
 
             for (OrderProduct op : order.getOrderProducts()) {
-                Product product = op.getProduct();
-                int quantity = op.getQuantity();
 
                 // 기존 재고 + 취소된 수량
-                product.setStock(product.getStock() + quantity);
+                op.getProduct().setStock(op.getProduct().getStock() + op.getQuantity());
 
                 // 재고 수량 반영
-                productService.save(product);
+                productService.save(op.getProduct());
             }
         }
 
         // 3. 상태 변경
         order.setStatus(newStatus);
+        order.setManageId(manageId);
 
         // 4. DB에 반영 (Dirty Checking)
         // JPA에서는 save() 없이도 변경 사항이 자동 반영됨.

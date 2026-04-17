@@ -1,6 +1,5 @@
 package com.coffee.controller;
 
-import com.coffee.dto.CartItemDto;
 import com.coffee.dto.CartProductDto;
 import com.coffee.entity.Member;
 import com.coffee.service.CartProductService;
@@ -10,10 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
 import java.util.List;
 
 
@@ -81,10 +78,6 @@ public class CartController {
 
     @DeleteMapping("/deleteList")
     public ResponseEntity<String> deleteCartProducts(@RequestBody List<Long> cartProductId){
-
-        log.info("====================> {}", cartProductId);
-        log.info("====================> {}", cartProductId);
-        log.info("====================> {}", cartProductId);
 
         cartProductId.forEach(cartProductService::deleteCartProductById);
 

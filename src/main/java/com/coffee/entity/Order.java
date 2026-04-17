@@ -40,5 +40,8 @@ public class Order { // 주문과 관련된 Entity입니다.
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status ; // 주문 상태
+
+    @Column(name = "manage_id")
+    private Long manageId ; // 관리자 ID
 }
 

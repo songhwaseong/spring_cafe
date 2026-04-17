@@ -52,11 +52,12 @@ public class OrderController {
 
     // 관리자가 수행하는 주문된 상품에 대한 `완료` 처리 기능
     @PutMapping("/update/status/{orderId}")
-    public ResponseEntity<String> statusChange(@PathVariable Long orderId, @RequestParam OrderStatus status){
+    public ResponseEntity<String> statusChange(@PathVariable Long orderId,@RequestParam Long manageId, @RequestParam OrderStatus status){
         System.out.println("수정할 항목의 아이디 : " + orderId);
+        System.out.println("수정하는 관리자 아이디 : " + manageId);
         System.out.println("변경하고자 하는 주문 상태 : " + status);
 
-        return ResponseEntity.ok(orderService.updateOrderStatus(orderId, status));
+        return ResponseEntity.ok(orderService.updateOrderStatus(orderId, manageId, status));
     }
 
     // `관리자` 또는 `당사자`가 주문에 대한 삭제 요청을 하였습니다.
