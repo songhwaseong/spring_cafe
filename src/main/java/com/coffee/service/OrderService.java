@@ -127,7 +127,8 @@ public class OrderService {
             // `주문 상품` 여러 개에 대한 셋팅
             List<OrderDetailDto.OrderItem> orderItems = new ArrayList<>();
             for (OrderProduct op : order.getOrderProducts()) {
-                orderItems.add(OrderDetailDto.OrderItem.builder()
+                orderItems.add(
+                        OrderDetailDto.OrderItem.builder()
                         .productId(op.getProduct().getId())
                         .productName(op.getProduct().getName())
                         .quantity(op.getQuantity())
@@ -165,7 +166,7 @@ public class OrderService {
             throw new IllegalStateException("취소된 주문은 상태를 변경할 수 없습니다.");
         }
 
-        // 2. `주문 상품`을 반복하면서 재고 수량을 더해 줍니다.(수량 복원)
+        // 3. 취소로 변경할 일경우 `주문 상품`을 반복하면서 재고 수량을 더해 줍니다.(수량 복원)
         if(OrderStatus.CANCELED.equals(newStatus)){
 
             for (OrderProduct op : order.getOrderProducts()) {
@@ -178,9 +179,14 @@ public class OrderService {
             }
         }
 
-        // 3. 상태 변경
+        // 4. 상태 변경
         order.setStatus(newStatus);
-        order.setManageId(manageId);
+
+        //5. 상태변경한 관리자 아이디 기록
+        Optional<Member> member =  memberService.findMemberById(manageId);
+        if (member.isPresent() && "ADMIN".equals(member.get().getRole().name())) {  //상태변경한 사람이 관리자인경우에만
+            order.setManageId(manageId);
+        }
 
         // 4. DB에 반영 (Dirty Checking)
         // JPA에서는 save() 없이도 변경 사항이 자동 반영됨.
