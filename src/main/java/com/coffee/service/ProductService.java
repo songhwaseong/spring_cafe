@@ -1,9 +1,14 @@
 package com.coffee.service;
 
 import com.coffee.constant.Category;
+import com.coffee.constant.OrderStatus;
 import com.coffee.dto.SearchDto;
+import com.coffee.entity.Order;
+import com.coffee.entity.OrderProduct;
 import com.coffee.entity.Product;
+import com.coffee.repository.OrderRepository;
 import com.coffee.repository.ProductRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -18,14 +23,17 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
+
+@Slf4j
 @Service
 public class ProductService {
     @Autowired
     private ProductRepository productRepository ;
+    @Autowired
+    private OrderRepository orderRepository;
 
     /*상품 목록 가져 오기*/
     public List<Product> getProductList() {
@@ -259,11 +267,34 @@ public class ProductService {
         // 상품의 id를 역순으로 정렬하기
         Sort sort = Sort.by(Sort.Order.desc("id")) ;
 
-        String orderByPrice = searchDto.getOrderbyPrice();
-        if("DESC".equals(orderByPrice)){
+        String orderBy = searchDto.getOrderBy();
+        if("DescByPrice".equals(orderBy)){
             sort = Sort.by(Sort.Order.desc("price")) ;
-        }else if("ASC".equals(orderByPrice)){
+        }else if("AscByPrice".equals(orderBy)){
             sort = Sort.by(Sort.Order.asc("price")) ;
+        }else if("DescByName".equals(orderBy)){
+            sort = Sort.by(Sort.Order.desc("name")) ;
+        }else if("AscByName".equals(orderBy)){
+            sort = Sort.by(Sort.Order.asc("name")) ;
+        }else if("DescByDate".equals(orderBy)){
+            sort = Sort.by(Sort.Order.desc("inputdate")) ;
+        }else if("ASCByDate".equals(orderBy)){
+            sort = Sort.by(Sort.Order.asc("inputdate")) ;
+        }else if("ASCByOrderCnt".equals(orderBy)){
+            sort = Sort.by(Sort.Order.asc("inputdate")) ;
+
+//           List<Order> orders = orderRepository.findAll(Sort.by(Sort.Direction.DESC, "id"));
+//            Map<Long, Integer> prdIdQty = new HashMap<>();
+//            for (Order o : orders) {
+//                for (OrderProduct op : o.getOrderProducts()) {
+//                    //맵에 데이터가 없으면
+//                    prdIdQty.merge(op.getProduct().getId(), op.getQuantity(), Integer::sum);
+//                }
+//            }
+//
+//            List<Long> entries =  prdIdQty.entrySet().stream().sorted(Map.Entry.comparingByValue()).map(p-> p.getKey()).toList();
+//            Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+//            Page<Product> paPrd =  productRepository.findAll(spec, pageable);
         }
 
         // pageNumber 페이지(0 base)를 보여 주시되, sort 방식으로 정렬하여 pageSize 개씩 보여 주세요.

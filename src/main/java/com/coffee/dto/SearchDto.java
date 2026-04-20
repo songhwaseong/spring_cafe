@@ -23,5 +23,5 @@ public class SearchDto {
     private String searchKeyword ; // 검색 키워드 입력 상자
 
     //가격정렬
-    private String orderbyPrice;
+    private String orderBy;
 }
