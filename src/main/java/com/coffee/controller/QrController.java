@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.ByteArrayOutputStream;
@@ -17,13 +18,17 @@ import java.io.ByteArrayOutputStream;
 @RestController
 public class QrController {
     @GetMapping(value = "/qr/generate")
-    public ResponseEntity<byte[]> test() throws WriterException {
+    public ResponseEntity<byte[]> test(@RequestParam String text) throws WriterException {
 
 
+        System.out.println("text : "+text);
+        System.out.println("text : "+text);
+        System.out.println("text : "+text);
         // QR 정보
-        int width = 300;
-        int height = 300;
+        int width = 100;
+        int height = 100;
         String url = "http://192.168.0.227:5173";
+        url = text;
 
         // QR code 이미지로 return
         try {
