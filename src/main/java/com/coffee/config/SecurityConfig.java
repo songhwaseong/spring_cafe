@@ -41,7 +41,8 @@ public class SecurityConfig {
                 "/js/**",
                 "/member/signup",
                 "/member/login",
-                "/product/**"
+                "/product/**",
+                "qr/generate"
         };
 
         http

@@ -4,15 +4,10 @@ import com.coffee.constant.OrderStatus;
 import com.coffee.constant.Role;
 import com.coffee.dto.OrderDetailDto;
 import com.coffee.dto.OrderDto;
-import com.coffee.entity.Member;
 import com.coffee.entity.Order;
 import com.coffee.service.OrderService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -67,8 +62,7 @@ public class OrderController {
 
         try {
             // 서비스에 모든 비즈니스 로직을 위임
-            String message = orderService.cancelOrder(orderId);
-            return ResponseEntity.ok(message);
+            return ResponseEntity.ok(orderService.cancelOrder(orderId));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

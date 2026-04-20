@@ -1,10 +1,13 @@
 package com.coffee.controller;
 
+import com.coffee.constant.Category;
+import com.coffee.dto.SearchDto;
 import com.coffee.entity.Product;
 import com.coffee.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -22,10 +25,10 @@ public class ProductController {
     @Autowired
     private ProductService productService ;
 
-    @GetMapping("/list") // 상품 목록을 List 컬렉션으로 반환해 줍니다.
-    public List<Product> list(){
-        return this.productService.getProductList() ;
-    }
+//    @GetMapping("/list") // 상품 목록을 List 컬렉션으로 반환해 줍니다.
+//    public List<Product> list(){
+//        return this.productService.getProductList() ;
+//    }
 
     // 클라이언트가 특정 상품 id에 대하여 "삭제" 요청을 하였습니다.
     // @PathVariable는 URL의 경로 변수를 메소드의 매개 변수로 값을 전달해 줍니다.
@@ -173,6 +176,34 @@ public class ProductController {
         return product.isEmpty()
                 ? ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("item","no"))
                 : ResponseEntity.ok(product.get());
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<Page<Product>> listProducts(
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "6") int pageSize,
+            @RequestParam(defaultValue = "all") String searchDateType,
+            @RequestParam(defaultValue = "") Category category,
+            @RequestParam(defaultValue = "") String searchMode ,
+            @RequestParam(defaultValue = "") String searchKeyword,
+            @RequestParam(defaultValue = "all") String orderByPrice
+    ){
+        SearchDto searchDto = new SearchDto(searchDateType, category, searchMode, searchKeyword, orderByPrice);
+
+        Page<Product> products = productService.listProducts(searchDto, pageNumber, pageSize) ;
+
+        System.out.println("검색 조건 : " + searchDto);
+        System.out.println("총 상품 개수 : " + products.getTotalElements());
+        System.out.println("총 페이지 번호 : " + products.getTotalPages());
+        System.out.println("현재 페이지 번호 : " + products.getNumber());
+
+        // Http 응답 코드 200과 함께 상품 정보를 json 형태로 반환해 줍니다.
+        return ResponseEntity.ok(products) ;
+    }
+
+    @GetMapping("") // 홈 페이지에 보여줄 큰 이미지들에 대한 정보를 읽어 옵니다.
+    public List<Product> getBigsizeProducts(@RequestParam(required = false) String filter){
+        return productService.getProductsByFilter(filter) ;
     }
 }
 

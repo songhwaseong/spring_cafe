@@ -19,6 +19,7 @@ public class CorsConfig {
         // 허용 Origin 주소 프론트 주소 (React 개발 서버)
         configuration.setAllowedOrigins(List.of(
                 "http://192.168.0.36:5173",     //집 와이파이
+                "http://192.168.0.227:5173",     //학원 와이파이
                 "http://localhost:5173",
                 "http://127.0.0.1:5173"
         ));

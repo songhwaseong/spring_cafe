@@ -10,12 +10,11 @@ import com.coffee.entity.Order;
 import com.coffee.entity.OrderProduct;
 import com.coffee.entity.Product;
 import com.coffee.repository.OrderRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -209,16 +208,26 @@ public class OrderService {
         Order order = orderOptional.get();
 
         // 2. `주문 상품`을 반복하면서 재고 수량을 더해 줍니다.(수량 복원)
-        for (OrderProduct op : order.getOrderProducts()) {
-            Product product = op.getProduct();
-            int quantity = op.getQuantity();
-
-            // 기존 재고 + 취소된 수량
-            product.setStock(product.getStock() + quantity);
-
-            // 재고 수량 반영
-            productService.save(product);
+//        for (OrderProduct op : order.getOrderProducts()) {
+//            Product product = op.getProduct();
+//            int quantity = op.getQuantity();
+//
+//            // 기존 재고 + 취소된 수량
+//            product.setStock(product.getStock() + quantity);
+//
+//            // 재고 수량 반영
+//            productService.save(product);
+//        }
+        if(order.getOrderProducts() == null){
+            throw new IllegalArgumentException("해당 주문상품이 존재하지 않습니다. ");
         }
+        order.getOrderProducts().forEach(op -> {
+            // 기존 재고 + 취소된 수량
+            op.getProduct().setStock(op.getQuantity()+op.getProduct().getStock());
+            // 재고 수량 반영
+            productService.save(op.getProduct());
+        });
+
 
         // 3. 주문 삭제
         orderRepository.deleteById(orderId);
