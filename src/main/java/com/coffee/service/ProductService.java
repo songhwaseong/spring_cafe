@@ -36,17 +36,17 @@ public class ProductService {
     private OrderRepository orderRepository;
 
     /*상품 목록 가져 오기*/
-    public List<Product> getProductList() {
-        return this.productRepository.findProductByOrderByIdDesc();
-    }
+//    public List<Product> getProductList() {
+//        return this.productRepository.findProductByOrderByIdDesc();
+//    }
 
 //    public Page<Product> listProducts(Pageable pageable) {
 //        return this.productRepository.findAll(pageable);
 //    }
 
-    public Page<Product> listProducts(Pageable pageable) {
-        return this.productRepository.findAll(pageable);
-    }
+//    public Page<Product> listProducts(Pageable pageable) {
+//        return this.productRepository.findAll(pageable);
+//    }
 
     @Value("${productImageLocation}")
     private String productImageLocation ;
@@ -254,11 +254,16 @@ public class ProductService {
         System.out.println("searchMode :: "+searchMode);
 
         if(searchMode != null && searchKeyword != null && !searchKeyword.isEmpty()){
-            if("name".equals(searchMode)){ // 상품명으로 검색
+            if("id".equals(searchMode)){ // 상품ID 으로 검색
+                spec = spec.and(ProductSpecification.hasId(Long.parseLong(searchKeyword)));
+            }else if("name".equals(searchMode)){ // 상품명으로 검색
                 spec = spec.and(ProductSpecification.hasNameLike(searchKeyword));
-
             }else if("description".equals(searchMode)){ // 상품 설명으로 검색
                 spec = spec.and(ProductSpecification.hasDescriptionLike(searchKeyword));
+            }else if("priceMore".equals(searchMode)){ // 가격으로 이상 검색
+                spec = spec.and(ProductSpecification.hasPriceMoreRange(Integer.parseInt(searchKeyword)));
+            }else if("priceLess".equals(searchMode)){ // 가격으로 이하 검색
+                spec = spec.and(ProductSpecification.hasPriceLessRange(Integer.parseInt(searchKeyword)));
             }else{
                 spec = spec.and(ProductSpecification.hasNameLike(searchKeyword))
                         .or(ProductSpecification.hasDescriptionLike(searchKeyword));
@@ -278,29 +283,12 @@ public class ProductService {
             sort = Sort.by(Sort.Order.asc("name")) ;
         }else if("DescByDate".equals(orderBy)){
             sort = Sort.by(Sort.Order.desc("inputdate")) ;
-        }else if("ASCByDate".equals(orderBy)){
+        }else if("AscByDate".equals(orderBy)){
             sort = Sort.by(Sort.Order.asc("inputdate")) ;
-        }else if("ASCByOrderCnt".equals(orderBy)){
-            sort = Sort.by(Sort.Order.asc("inputdate")) ;
-
-//           List<Order> orders = orderRepository.findAll(Sort.by(Sort.Direction.DESC, "id"));
-//            Map<Long, Integer> prdIdQty = new HashMap<>();
-//            for (Order o : orders) {
-//                for (OrderProduct op : o.getOrderProducts()) {
-//                    //맵에 데이터가 없으면
-//                    prdIdQty.merge(op.getProduct().getId(), op.getQuantity(), Integer::sum);
-//                }
-//            }
-//
-//            List<Long> entries =  prdIdQty.entrySet().stream().sorted(Map.Entry.comparingByValue()).map(p-> p.getKey()).toList();
-//            Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-//            Page<Product> paPrd =  productRepository.findAll(spec, pageable);
         }
 
         // pageNumber 페이지(0 base)를 보여 주시되, sort 방식으로 정렬하여 pageSize 개씩 보여 주세요.
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-
-
 
         return  productRepository.findAll(spec, pageable);
 

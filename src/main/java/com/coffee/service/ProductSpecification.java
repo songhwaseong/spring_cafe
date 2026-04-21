@@ -58,29 +58,45 @@ public class ProductSpecification {
             }
         };
     }
-    public static Specification<Product> hasNameLike(String keyword){
+    public static Specification<Product> hasId(Long id){
         return new Specification<Product>() {
             @Override
             public Predicate toPredicate(Root<Product> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
-                return criteriaBuilder.like(root.get("name"), "%" + keyword + "%");
+                return criteriaBuilder.equal(root.get("id"), id);
+            }
+        };
+    }
+    public static Specification<Product> hasNameLike(String keyWord){
+        return new Specification<Product>() {
+            @Override
+            public Predicate toPredicate(Root<Product> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
+                return criteriaBuilder.like(root.get("name"), "%" + keyWord + "%");
             }
         };
     }
 
-    public static Specification<Product> hasDescriptionLike(String keyword){
+    public static Specification<Product> hasDescriptionLike(String keyWord){
         return new Specification<Product>() {
             @Override
             public Predicate toPredicate(Root<Product> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
-                return criteriaBuilder.like(root.get("description"), "%" + keyword + "%");
+                return criteriaBuilder.like(root.get("description"), "%" + keyWord + "%");
             }
         };
     }
 
-    public static Specification<Product> moreThenPrice(int price){
+    public static Specification<Product> hasPriceMoreRange(int price){
         return new Specification<Product>() {
             @Override
             public Predicate toPredicate(Root<Product> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
                 return criteriaBuilder.greaterThanOrEqualTo(root.get("price"), price);
+            }
+        };
+    }
+    public static Specification<Product> hasPriceLessRange(int price){
+        return new Specification<Product>() {
+            @Override
+            public Predicate toPredicate(Root<Product> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
+                return criteriaBuilder.lessThanOrEqualTo(root.get("price"), price);
             }
         };
     }

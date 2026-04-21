@@ -20,10 +20,6 @@ public class QrController {
     @GetMapping(value = "/qr/generate")
     public ResponseEntity<byte[]> test(@RequestParam String text) throws WriterException {
 
-
-        System.out.println("text : "+text);
-        System.out.println("text : "+text);
-        System.out.println("text : "+text);
         // QR 정보
         int width = 100;
         int height = 100;
