@@ -183,12 +183,18 @@ public class ProductController {
             @RequestParam(defaultValue = "0") int pageNumber,
             @RequestParam(defaultValue = "6") int pageSize,
             @RequestParam(defaultValue = "all") String searchDateType,
-            @RequestParam(defaultValue = "") Category category,
+            @RequestParam(defaultValue = "ALL") Category category,
             @RequestParam(defaultValue = "") String searchMode ,
             @RequestParam(defaultValue = "") String searchKeyword,
-            @RequestParam(defaultValue = "all") String orderBy
+            @RequestParam(defaultValue = "Id") String orderBy
     ){
-        SearchDto searchDto = new SearchDto(searchDateType, category, searchMode, searchKeyword, orderBy);
+        SearchDto searchDto = SearchDto.builder()
+                                        .searchMode(searchMode)
+                                        .searchDateType(searchDateType)
+                                        .category(category)
+                                        .searchKeyword(searchKeyword)
+                                        .orderBy(orderBy)
+                                        .build();
 
         Page<Product> products = productService.listProducts(searchDto, pageNumber, pageSize) ;
 

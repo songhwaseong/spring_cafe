@@ -241,7 +241,7 @@ public class ProductService {
         // 카테고리의 조건 추가하기
         if(searchDto.getCategory() != null){
             //spec = spec.and(ProductSpecification.hasCategory(searchDto.getCategory()));
-            Category categoryEnum = Category.valueOf(searchDto.getCategory().toString().toUpperCase());
+            Category categoryEnum = searchDto.getCategory();
             spec = spec.and(ProductSpecification.hasCategory(categoryEnum));
         }
 
@@ -249,43 +249,31 @@ public class ProductService {
         String searchMode = searchDto.getSearchMode() ;
         String searchKeyword = searchDto.getSearchKeyword() ;
 
-        System.out.println("searchMode :: "+searchMode);
-        System.out.println("searchMode :: "+searchMode);
-        System.out.println("searchMode :: "+searchMode);
-
         if(searchMode != null && searchKeyword != null && !searchKeyword.isEmpty()){
-            if("id".equals(searchMode)){ // 상품ID 으로 검색
-                spec = spec.and(ProductSpecification.hasId(Long.parseLong(searchKeyword)));
-            }else if("name".equals(searchMode)){ // 상품명으로 검색
-                spec = spec.and(ProductSpecification.hasNameLike(searchKeyword));
-            }else if("description".equals(searchMode)){ // 상품 설명으로 검색
-                spec = spec.and(ProductSpecification.hasDescriptionLike(searchKeyword));
-            }else if("priceMore".equals(searchMode)){ // 가격으로 이상 검색
-                spec = spec.and(ProductSpecification.hasPriceMoreRange(Integer.parseInt(searchKeyword)));
-            }else if("priceLess".equals(searchMode)){ // 가격으로 이하 검색
-                spec = spec.and(ProductSpecification.hasPriceLessRange(Integer.parseInt(searchKeyword)));
-            }else{
-                spec = spec.and(ProductSpecification.hasNameLike(searchKeyword))
-                        .or(ProductSpecification.hasDescriptionLike(searchKeyword));
-            }
+            spec = switch (searchMode) {
+                case "id" -> spec.and(ProductSpecification.hasId(Long.parseLong(searchKeyword)));
+                case "name" -> spec.and(ProductSpecification.hasNameLike(searchKeyword));
+                case "description" -> spec.and(ProductSpecification.hasDescriptionLike(searchKeyword));
+                case "priceMore" -> spec.and(ProductSpecification.hasPriceMoreRange(Integer.parseInt(searchKeyword)));
+                case "priceLess" -> spec.and(ProductSpecification.hasPriceLessRange(Integer.parseInt(searchKeyword)));
+                default -> spec;
+//                default -> (spec.and(ProductSpecification.hasNameLike(searchKeyword))
+//                        .or(ProductSpecification.hasDescriptionLike(searchKeyword)));
+            };
         }
         // 상품의 id를 역순으로 정렬하기
-        Sort sort = Sort.by(Sort.Order.desc("id")) ;
 
         String orderBy = searchDto.getOrderBy();
-        if("DescByPrice".equals(orderBy)){
-            sort = Sort.by(Sort.Order.desc("price")) ;
-        }else if("AscByPrice".equals(orderBy)){
-            sort = Sort.by(Sort.Order.asc("price")) ;
-        }else if("DescByName".equals(orderBy)){
-            sort = Sort.by(Sort.Order.desc("name")) ;
-        }else if("AscByName".equals(orderBy)){
-            sort = Sort.by(Sort.Order.asc("name")) ;
-        }else if("DescByDate".equals(orderBy)){
-            sort = Sort.by(Sort.Order.desc("inputdate")) ;
-        }else if("AscByDate".equals(orderBy)){
-            sort = Sort.by(Sort.Order.asc("inputdate")) ;
-        }
+
+        Sort sort = switch (orderBy) {
+            case "DescByPrice" -> Sort.by(Sort.Order.desc("price")) ;
+            case "AscByPrice" -> Sort.by(Sort.Order.asc("price")) ;
+            case "DescByName" -> Sort.by(Sort.Order.desc("name")) ;
+            case "AscByName" -> Sort.by(Sort.Order.asc("name")) ;
+            case "DescByDate" -> Sort.by(Sort.Order.desc("inputdate")) ;
+            case "AscByDate" -> Sort.by(Sort.Order.asc("inputdate")) ;
+            default -> Sort.by(Sort.Order.desc("id"));
+        };
 
         // pageNumber 페이지(0 base)를 보여 주시되, sort 방식으로 정렬하여 pageSize 개씩 보여 주세요.
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
