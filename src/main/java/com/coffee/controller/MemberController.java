@@ -1,6 +1,7 @@
 package com.coffee.controller;
 
 
+import com.coffee.common.FuncData;
 import com.coffee.config.JwtTokenProvider;
 import com.coffee.dto.LoginDto;
 import com.coffee.entity.Member;
@@ -17,10 +18,12 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,6 +37,7 @@ public class MemberController {
     private final MemberService memberService;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
+    private final PasswordEncoder passwordEncoder ;
 
     @PostMapping("/tokenChk")
     public ResponseEntity<?> tokenChk(){
@@ -95,4 +99,73 @@ public class MemberController {
         return new ResponseEntity<>(bean, HttpStatus.OK);
     }
 
+    @PostMapping("/naverLogin")
+    public ResponseEntity<?> naverLogin(@RequestBody HashMap<String, Object> params) throws IOException {
+
+        System.out.println("code :::" + params.get("code"));
+        System.out.println("code :::" + params.get("state"));
+        String accessToken = "";
+        Map<String, String> userInfo = new HashMap<>();
+
+        try {
+            accessToken =memberService.getNavAccessToken((String)params.get("code"), (String)params.get("code"));
+            userInfo = memberService.getUserInfo(accessToken);
+        }catch (Exception e){
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+        System.out.println("accessToken :::" + accessToken);
+        System.out.println("accessToken :::" + accessToken);
+        System.out.println("accessToken :::" + accessToken);
+        System.out.println("userInfo :::" + userInfo);
+
+
+        System.out.println("email :::" + userInfo.get("email"));
+        System.out.println("name :::" + FuncData.decodeUnicode(userInfo.get("name")));
+        System.out.println("gender :::" + userInfo.get("gender"));
+        System.out.println("age :::" + userInfo.get("age"));
+        System.out.println("birthday :::" + userInfo.get("birthday"));
+        System.out.println("mobile :::" + userInfo.get("mobile"));
+
+        String email = userInfo.get("email");
+        Member member = memberService.findByEmail(email);
+        if(member == null){
+            member = Member.builder()
+                    .name(FuncData.decodeUnicode(userInfo.get("name")))
+                    .password(passwordEncoder.encode("NaverLogin!")) //네이버 로그인시 임시비번
+                    .email(userInfo.get("email"))
+                    .build();
+            memberService.insert(member);
+        }
+
+
+
+
+
+//        authenticationManager.authenticate(
+//                new UsernamePasswordAuthenticationToken(
+//                        dto.getEmail(),
+//                        dto.getPassword()
+//                )
+//        );
+//
+//        Member member = memberService.findByEmail(dto.getEmail());
+//
+//        return member == null
+//                ? ResponseEntity
+//                  .status(HttpStatus.UNAUTHORIZED)
+//                  .body(Map.of("error", "사용자 정보를 찾을 수 없습니다."))
+//                : ResponseEntity.ok(Map.of(
+//                "accessToken", jwtTokenProvider.createToken(member, dto.isAutoLogin()),
+//                "id", member.getId(),
+//                "name", member.getName(),
+//                "email", member.getEmail(),
+//                "role", member.getRole().name()));
+//    }
+        return ResponseEntity.ok(Map.of(
+                "accessToken", jwtTokenProvider.createToken(member, true),
+                "id", member.getId(),
+                "name", member.getName(),
+                "email", member.getEmail(),
+                "role", member.getRole().name()));
+    }
 }

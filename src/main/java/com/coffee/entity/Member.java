@@ -40,7 +40,6 @@ public class Member {
     @Pattern(regexp = ".*[!@#$%].*", message = "비밀 번호는 특수 문자 '!@#$%' 중 하나 이상을 포함해야 합니다.")
     private String password;
 
-    @NotBlank(message = "주소는 필수 입력 사항입니다.")
     private String address;
 
     private String addressDetail;
