@@ -69,6 +69,7 @@ public class MemberService {
             br = new BufferedReader(new InputStreamReader(con.getInputStream()));
         } else {  // 에러 발생
             br = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+            throw new IOException("naver network Error");
         }
         return FuncData.parseStr(br.readLine(),"access_token");
     }
