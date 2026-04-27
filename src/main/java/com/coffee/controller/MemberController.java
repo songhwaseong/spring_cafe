@@ -106,10 +106,12 @@ public class MemberController {
         System.out.println("code :::" + params.get("state"));
         String accessToken = "";
         Map<String, String> userInfo = new HashMap<>();
+        Map<String, String> trackerInfo = new HashMap<>();
 
         try {
             accessToken =memberService.getNavAccessToken((String)params.get("code"), (String)params.get("code"));
             userInfo = memberService.getUserInfo(accessToken);
+            trackerInfo = memberService.getTrackingInfo("04","697571085141");
         }catch (Exception e){
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -117,7 +119,7 @@ public class MemberController {
         System.out.println("accessToken :::" + accessToken);
         System.out.println("accessToken :::" + accessToken);
         System.out.println("userInfo :::" + userInfo);
-
+        System.out.println("trackerInfo :::" + trackerInfo);
 
         System.out.println("email :::" + userInfo.get("email"));
         System.out.println("name :::" + FuncData.decodeUnicode(userInfo.get("name")));

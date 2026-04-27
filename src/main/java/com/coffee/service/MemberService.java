@@ -74,6 +74,31 @@ public class MemberService {
         return FuncData.parseStr(br.readLine(),"access_token");
     }
 
+    public Map<String, String> getTrackingInfo(String t_code, String t_invoice) throws IOException {
+        String t_key = "6M1QKzCsuvgoVf5W1Y0gvQ";
+
+        String apiURL = "https://info.sweettracker.co.kr/api/v1/trackingInfo?"
+                + "t_code=" + t_code
+                + "&t_invoice=" + t_invoice
+                + "&t_key=" + t_key;
+
+        URL url = new URL(apiURL);
+        HttpURLConnection con = (HttpURLConnection)url.openConnection();
+        con.setRequestMethod("GET"); // GET 또는 POST
+
+        int responseCode = con.getResponseCode();
+        BufferedReader br;
+        if(responseCode==200) { // 정상 호출
+            br = new BufferedReader(new InputStreamReader(con.getInputStream()));
+        } else {  // 에러 발생
+            br = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+            throw new IOException("trackker network Error");
+        }
+        String data = br.readLine();
+        System.out.println("data ::: "+data);
+        return FuncData.parseInfo(data);
+    }
+
     public Map<String, String> getUserInfo(String accessToken) throws IOException {
         String apiUrl = "https://openapi.naver.com/v1/nid/me";
 
