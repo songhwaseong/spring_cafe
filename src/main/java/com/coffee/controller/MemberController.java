@@ -3,6 +3,7 @@ package com.coffee.controller;
 
 import com.coffee.common.FuncData;
 import com.coffee.config.JwtTokenProvider;
+import com.coffee.dto.KakaoUserResponse;
 import com.coffee.dto.LoginDto;
 import com.coffee.entity.Member;
 import com.coffee.service.MemberService;
@@ -115,18 +116,6 @@ public class MemberController {
         }catch (Exception e){
             return ResponseEntity.badRequest().body(e.getMessage());
         }
-        System.out.println("accessToken :::" + accessToken);
-        System.out.println("accessToken :::" + accessToken);
-        System.out.println("accessToken :::" + accessToken);
-        System.out.println("userInfo :::" + userInfo);
-        System.out.println("trackerInfo :::" + trackerInfo);
-
-        System.out.println("email :::" + userInfo.get("email"));
-        System.out.println("name :::" + FuncData.decodeUnicode(userInfo.get("name")));
-        System.out.println("gender :::" + userInfo.get("gender"));
-        System.out.println("age :::" + userInfo.get("age"));
-        System.out.println("birthday :::" + userInfo.get("birthday"));
-        System.out.println("mobile :::" + userInfo.get("mobile"));
 
         String email = userInfo.get("email");
         Member member = memberService.findByEmail(email);
@@ -139,30 +128,39 @@ public class MemberController {
             memberService.insert(member);
         }
 
+        return ResponseEntity.ok(Map.of(
+                "accessToken", jwtTokenProvider.createToken(member, true),
+                "id", member.getId(),
+                "name", member.getName(),
+                "email", member.getEmail(),
+                "role", member.getRole().name()));
+    }
+    @PostMapping("/kakaoLogin")
+    public ResponseEntity<?> kakaoLogin(@RequestBody HashMap<String, Object> params) throws IOException {
 
+        System.out.println("code :::" + params.get("code"));
+        String accessToken = "";
+        KakaoUserResponse userInfo = null;
+        Map<String, String> trackerInfo = new HashMap<>();
 
+        try {
+            accessToken =memberService.getKkoAccessToken((String)params.get("code"));
+            userInfo = memberService.getKakaoUserInfo(accessToken);
+        }catch (Exception e){
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
 
+        String email = userInfo.kakaoAccount().email();
+        Member member = memberService.findByEmail(email);
+        if(member == null){
+            member = Member.builder()
+                    .name(FuncData.decodeUnicode(userInfo.kakaoAccount().profile().nickname()))
+                    .password(passwordEncoder.encode("NaverLogin!")) //네이버 로그인시 임시비번
+                    .email(email)
+                    .build();
+            memberService.insert(member);
+        }
 
-//        authenticationManager.authenticate(
-//                new UsernamePasswordAuthenticationToken(
-//                        dto.getEmail(),
-//                        dto.getPassword()
-//                )
-//        );
-//
-//        Member member = memberService.findByEmail(dto.getEmail());
-//
-//        return member == null
-//                ? ResponseEntity
-//                  .status(HttpStatus.UNAUTHORIZED)
-//                  .body(Map.of("error", "사용자 정보를 찾을 수 없습니다."))
-//                : ResponseEntity.ok(Map.of(
-//                "accessToken", jwtTokenProvider.createToken(member, dto.isAutoLogin()),
-//                "id", member.getId(),
-//                "name", member.getName(),
-//                "email", member.getEmail(),
-//                "role", member.getRole().name()));
-//    }
         return ResponseEntity.ok(Map.of(
                 "accessToken", jwtTokenProvider.createToken(member, true),
                 "id", member.getId(),

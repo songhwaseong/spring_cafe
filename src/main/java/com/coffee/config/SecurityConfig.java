@@ -42,6 +42,7 @@ public class SecurityConfig {
                 "/member/signup",
                 "/member/login",
                 "/member/naverLogin",
+                "/member/kakaoLogin",
                 "/product/**",
                 "qr/generate"
         };

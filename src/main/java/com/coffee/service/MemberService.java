@@ -2,12 +2,21 @@ package com.coffee.service;
 
 import com.coffee.common.FuncData;
 import com.coffee.constant.Role;
+import com.coffee.dto.KakaoTokenResponse;
+import com.coffee.dto.KakaoUserResponse;
 import com.coffee.entity.Member;
 import com.coffee.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -28,6 +37,7 @@ public class MemberService {
     private final MemberRepository memberRepository ;
 
     private final PasswordEncoder passwordEncoder ;
+    private final RestTemplate restTemplate = new RestTemplate();
 
 
     public Member findByEmail(String email) {
@@ -72,6 +82,32 @@ public class MemberService {
             throw new IOException("naver network Error");
         }
         return FuncData.parseStr(br.readLine(),"access_token");
+    }
+
+    public String getKkoAccessToken(String code) throws IOException {
+        String clientId = "3c6d9d432fdac13ca5f9565cb91764c8";
+        String clientSecret = "hZOlSVY3CFByezjdNKMA1Y9hnMxCG7VT";
+        String redirect_uri = "http://localhost:5173/member/kauth";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("grant_type", "authorization_code");
+        params.add("client_id", clientId);
+        //params.add("client_secret", clientSecret);
+        params.add("redirect_uri", redirect_uri);
+        params.add("code", code);
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+
+        KakaoTokenResponse response = restTemplate.postForObject(
+                "https://kauth.kakao.com/oauth/token",
+                request,
+                KakaoTokenResponse.class
+        );
+
+        return response.getAccessToken();
     }
 
     public Map<String, String> getTrackingInfo(String t_code, String t_invoice) throws IOException {
@@ -120,6 +156,20 @@ public class MemberService {
 
         conn.disconnect();
         return FuncData.parseInfo(response.toString());
+    }
+
+    public KakaoUserResponse getKakaoUserInfo(String accessToken) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(accessToken);
+
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        return restTemplate.exchange(
+                "https://kapi.kakao.com/v2/user/me",
+                HttpMethod.GET,
+                request,
+                KakaoUserResponse.class
+        ).getBody();
     }
 
 }
