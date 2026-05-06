@@ -8,8 +8,6 @@ public class FileTest {
     public static void main(String[] args) {
         String imageFolder = "c:\\shop\\images";
 
-
-
         File folder = new File(imageFolder);
 
         if(folder.exists()){
